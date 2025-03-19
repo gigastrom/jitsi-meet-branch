@@ -8,10 +8,10 @@ import { IReduxState } from '../app/types';
 import { getLocalizedDateFormatter } from '../base/i18n/dateUtil';
 import i18next from '../base/i18n/i18next';
 import { isJwtFeatureEnabled } from '../base/jwt/functions';
-import { getParticipantById } from '../base/participants/functions';
+import { getParticipantById, getParticipantDisplayName, getRemoteParticipants } from '../base/participants/functions';
 import { escapeRegexp } from '../base/util/helpers';
 
-import { MESSAGE_TYPE_ERROR, MESSAGE_TYPE_LOCAL, TIMESTAMP_FORMAT } from './constants';
+import { MESSAGE_TYPE_ERROR, MESSAGE_TYPE_LOCAL, OPTION_GROUPCHAT, TIMESTAMP_FORMAT } from './constants';
 import { IMessage } from './types';
 
 /**
@@ -192,7 +192,6 @@ export function getPrivateNoticeMessage(message: IMessage) {
     });
 }
 
-
 /**
  * Check if participant is not allowed to send group messages.
  *
@@ -207,4 +206,32 @@ export function isSendGroupChatDisabled(state: IReduxState) {
     }
 
     return !isJwtFeatureEnabled(state, 'send-groupchat', false, false);
+}
+
+/**
+ * Returns options array for the private chat recipients list.
+ *
+ * @param {IReduxState} state - The redux state.
+ * @returns {{value: string, label: string}[]}
+ */
+export function getChatRecipientsOptions(state: IReduxState) {
+    const remoteParticipants = Array.from(getRemoteParticipants(state)?.values() || []);
+
+    const options = remoteParticipants
+        .filter(p => !p.fakeParticipant)
+        .map(p => {
+            return {
+                value: p.id,
+                label: getParticipantDisplayName(state, p.id)
+            };
+        });
+
+    options.sort((a, b) => a.label.localeCompare(b.label));
+
+    options.unshift({
+        label: i18next.t('chat.everyone'),
+        value: OPTION_GROUPCHAT
+    });
+
+    return options;
 }

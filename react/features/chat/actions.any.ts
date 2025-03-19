@@ -1,6 +1,6 @@
 import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
-import { getLocalParticipant } from '../base/participants/functions';
+import { getLocalParticipant, getParticipantById } from '../base/participants/functions';
 import { IParticipant } from '../base/participants/types';
 import { LOBBY_CHAT_INITIALIZED } from '../lobby/constants';
 
@@ -165,6 +165,25 @@ export function setPrivateMessageRecipient(participant?: Object) {
     return {
         participant,
         type: SET_PRIVATE_MESSAGE_RECIPIENT
+    };
+}
+
+/**
+ * Initiates the sending of a private message to the supplied participantId.
+ *
+ * @param {string} participantId - The participant id to set the recipient to.
+ * @returns {{
+*     participant: IParticipant,
+*     type: SET_PRIVATE_MESSAGE_RECIPIENT
+* }}
+*/
+export function setPrivateMessageRecipientById(participantId: string) {
+    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
+        const participant = getParticipantById(getState(), participantId);
+
+        if (participant) {
+            dispatch(setPrivateMessageRecipient(participant));
+        }
     };
 }
 
