@@ -315,7 +315,7 @@ StateListenerRegistry.register(
 );
 
 /**
- * Checks whether a notification for private chat recipients changed.
+ * Checks whether a notification for private chat recipients is needed.
  *
  * @param {IStore} store - The redux store.
  * @param {{ participant: IParticipant, type: string }} action - The action.
