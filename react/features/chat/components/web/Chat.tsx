@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { connect, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
-import { getLocalParticipant } from '../../../base/participants/functions';
+import { getLocalParticipant, getRemoteParticipants } from '../../../base/participants/functions';
 import { withPixelLineHeight } from '../../../base/styles/functions.web';
 import Select from '../../../base/ui/components/web/Select';
 import Tabs from '../../../base/ui/components/web/Tabs';
@@ -18,7 +18,6 @@ import {
     toggleChat
 } from '../../actions.web';
 import { CHAT_SIZE, CHAT_TABS, OPTION_GROUPCHAT, SMALL_WIDTH_THRESHOLD } from '../../constants';
-import { getChatRecipientsOptions } from '../../functions';
 import { IChatProps as AbstractProps } from '../../types';
 
 import ChatHeader from './ChatHeader';
@@ -172,8 +171,34 @@ const Chat = ({
     t
 }: IProps) => {
     const { classes, cx } = useStyles();
-    const sortedParticipants = useSelector(getChatRecipientsOptions);
+    const notifyTimestamp = useSelector((state: IReduxState) =>
+        state['features/chat'].notifyPrivateRecipientsChangedTimestamp
+    );
+    const {
+        defaultRemoteDisplayName = 'Fellow Jitster'
+    } = useSelector((state: IReduxState) => state['features/base/config']);
     const privateMessageRecipient = useSelector((state: IReduxState) => state['features/chat'].privateMessageRecipient);
+    const participants = useSelector(getRemoteParticipants);
+
+    const options = useMemo(() => {
+        const o = Array.from(participants?.values() || [])
+                .filter(p => !p.fakeParticipant)
+                .map(p => {
+                    return {
+                        value: p.id,
+                        label: p.name ?? defaultRemoteDisplayName
+                    };
+                });
+
+        o.sort((a, b) => a.label.localeCompare(b.label));
+
+        o.unshift({
+            label: t('chat.everyone'),
+            value: OPTION_GROUPCHAT
+        });
+
+        return o;
+    }, [ notifyTimestamp ]);
 
     /**
     * Sends a text message.
@@ -259,7 +284,7 @@ const Chat = ({
                         containerClassName = { cx(classes.privateMessageRecipientsList) }
                         id = 'select-chat-recipient'
                         onChange = { onSelectedRecipientChange }
-                        options = { sortedParticipants }
+                        options = { options }
                         value = { privateMessageRecipient?.id || OPTION_GROUPCHAT } />
                     <ChatInput
                         onSend = { onSendMessage } />

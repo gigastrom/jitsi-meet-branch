@@ -10,6 +10,7 @@ import {
     CLEAR_MESSAGES,
     CLOSE_CHAT,
     EDIT_MESSAGE,
+    NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SEND_MESSAGE,
     SEND_REACTION,
@@ -248,6 +249,22 @@ export function setLobbyChatActiveState(value: boolean) {
     return {
         type: SET_LOBBY_CHAT_ACTIVE_STATE,
         payload: value
+    };
+}
+
+/**
+ * Notifies the private chat recipients list changed.
+ *
+ * @returns {Object}
+ */
+export function notifyPrivateRecipientsChanged() {
+    return (dispatch: IStore['dispatch']) => {
+        const timestamp = Date.now();
+
+        return dispatch({
+            type: NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
+            payload: timestamp
+        });
     };
 }
 
