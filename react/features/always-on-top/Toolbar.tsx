@@ -117,6 +117,7 @@ export default class Toolbar extends Component<Props, IState> {
      * @returns {ReactElement}
      */
     override render() {
+        return null;
         const {
             className = '',
             onMouseOut,

@@ -21,3 +21,14 @@ export const BACKGROUND_ENABLED = 'BACKGROUND_ENABLED';
  * }}
  */
 export const SET_VIRTUAL_BACKGROUND = 'SET_VIRTUAL_BACKGROUND';
+
+/**
+ * The type of redux action dispatched when a shared background event occurs.
+ *
+ * @returns {{
+ *     type: SHARED_BACKGROUND_EVENT,
+ *     backgroundId: string,
+ *     enabled: boolean
+ * }}
+ */
+export const SHARED_BACKGROUND_EVENT = 'SHARED_BACKGROUND_EVENT';

@@ -1,8 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
+import Icon from '../../../base/icons/components/Icon';
 import { IconUsers } from '../../../base/icons/svg';
 import { getParticipantCount } from '../../../base/participants/functions';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
@@ -15,6 +17,27 @@ import { isParticipantsPaneEnabled } from '../../functions';
 
 import ParticipantsCounter from './ParticipantsCounter';
 
+const useStyles = makeStyles()(theme => {
+    return {
+        buttonWithBadge: {
+            position: 'relative',
+            transition: 'all 0.2s ease',
+            padding: '6px',
+            
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+            }
+        },
+        active: {
+            backgroundColor: 'var(--accent-color, #246FE5)',
+            borderRadius: '6px',
+            
+            '&:hover': {
+                backgroundColor: 'var(--accent-hover-color, #1a5bbf)'
+            }
+        }
+    };
+});
 
 /**
  * The type of the React {@code Component} props of {@link ParticipantsPaneButton}.
@@ -40,51 +63,29 @@ interface IProps extends AbstractButtonProps {
 /**
  * Implementation of a button for accessing participants pane.
  */
-class ParticipantsPaneButton extends AbstractButton<IProps> {
-    override toggledAccessibilityLabel = 'toolbar.accessibilityLabel.closeParticipantsPane';
-    override icon = IconUsers;
-    override label = 'toolbar.participants';
-    override tooltip = 'toolbar.participants';
-    override toggledTooltip = 'toolbar.closeParticipantsPane';
+const ParticipantsPaneButton = ({
+    _isOpen,
+    _isParticipantsPaneEnabled,
+    _participantsCount,
+    dispatch,
+    t
+}: IProps) => {
+    const { classes, cx } = useStyles();
 
-    /**
-     * Indicates whether this button is in toggled state or not.
-     *
-     * @override
-     * @protected
-     * @returns {boolean}
-     */
-    override _isToggled() {
-        return this.props._isOpen;
+    if (!_isParticipantsPaneEnabled) {
+        return null;
     }
 
-    /**
-    * Handles clicking the button, and toggles the participants pane.
-    *
-    * @private
-    * @returns {void}
-    */
-    override _handleClick() {
-        const { dispatch, _isOpen } = this.props;
-
+    const handleClick = () => {
         dispatch(closeOverflowMenuIfOpen());
         if (_isOpen) {
             dispatch(closeParticipantsPane());
         } else {
             dispatch(openParticipantsPane());
         }
-    }
+    };
 
-
-    /**
-     * Override the _getAccessibilityLabel method to incorporate the dynamic participant count.
-     *
-     * @override
-     * @returns {string}
-     */
-    override _getAccessibilityLabel() {
-        const { t, _participantsCount, _isOpen } = this.props;
-
+    const getAccessibilityLabel = () => {
         if (_isOpen) {
             return t('toolbar.accessibilityLabel.closeParticipantsPane');
         }
@@ -92,32 +93,25 @@ class ParticipantsPaneButton extends AbstractButton<IProps> {
         return t('toolbar.accessibilityLabel.participants', {
             participantsCount: _participantsCount
         });
+    };
 
-    }
-
-    /**
-     * Overrides AbstractButton's {@link Component#render()}.
-     *
-     * @override
-     * @protected
-     * @returns {React$Node}
-     */
-    override render() {
-        const { _isParticipantsPaneEnabled } = this.props;
-
-        if (!_isParticipantsPaneEnabled) {
-            return null;
-        }
-
-        return (
+    return (
+        <div
+            className={cx(classes.buttonWithBadge, {
+                [classes.active]: _isOpen
+            })}>
             <div
-                className = 'toolbar-button-with-badge'>
-                { super.render() }
-                <ParticipantsCounter />
+                accessibilityLabel={getAccessibilityLabel()}
+                onClick={handleClick}
+                role="button"
+                tabIndex={0}>
+                <Icon src={IconUsers} />
+                <span>{t('toolbar.participants')}</span>
             </div>
-        );
-    }
-}
+            <ParticipantsCounter />
+        </div>
+    );
+};
 
 /**
  * Maps part of the Redux state to the props of this component.

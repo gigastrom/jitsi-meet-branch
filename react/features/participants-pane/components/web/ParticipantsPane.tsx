@@ -28,20 +28,24 @@ import LobbyParticipants from './LobbyParticipants';
 import MeetingParticipants from './MeetingParticipants';
 import VisitorsList from './VisitorsList';
 
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()((theme: any) => {
     return {
         participantsPane: {
-            backgroundColor: theme.palette.ui01,
+            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.95))',
+            backdropFilter: 'blur(25px)',
             flexShrink: 0,
             overflow: 'hidden',
             position: 'relative',
-            transition: 'width .16s ease-in-out',
+            transition: 'all 0.3s ease-in-out',
             width: '315px',
             zIndex: 0,
             display: 'flex',
             flexDirection: 'column',
             fontWeight: 600,
             height: '100%',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
+            border: '1px solid var(--border-color, rgba(255, 255, 255, 0.1))',
+            borderRadius: '12px',
 
             [[ '& > *:first-child', '& > *:last-child' ] as any]: {
                 flexShrink: 0
@@ -53,7 +57,8 @@ const useStyles = makeStyles()(theme => {
                 left: 0,
                 right: 0,
                 top: 0,
-                width: '100%'
+                width: '100%',
+                borderRadius: 0
             }
         },
 
@@ -63,9 +68,24 @@ const useStyles = makeStyles()(theme => {
             overflowY: 'auto',
             position: 'relative',
             padding: `0 ${participantsPaneTheme.panePadding}px`,
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'var(--scroll-thumb-color, rgba(255, 255, 255, 0.2)) transparent',
 
             '&::-webkit-scrollbar': {
-                display: 'none'
+                width: '4px'
+            },
+
+            '&::-webkit-scrollbar-track': {
+                background: 'transparent'
+            },
+
+            '&::-webkit-scrollbar-thumb': {
+                background: 'var(--scroll-thumb-color, rgba(255, 255, 255, 0.2))',
+                borderRadius: '4px'
+            },
+
+            '&::-webkit-scrollbar-thumb:hover': {
+                background: 'var(--scroll-thumb-hover-color, rgba(255, 255, 255, 0.3))'
             }
         },
 
@@ -73,7 +93,21 @@ const useStyles = makeStyles()(theme => {
             alignItems: 'center',
             cursor: 'pointer',
             display: 'flex',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            padding: '8px',
+            borderRadius: '50%',
+            transition: 'all 0.2s ease',
+            backgroundColor: 'var(--button-background, rgba(255, 255, 255, 0.1))',
+            color: 'var(--text-color, #fff)',
+
+            '&:hover': {
+                backgroundColor: 'var(--button-background-hover, rgba(255, 255, 255, 0.2))',
+                transform: 'scale(1.05)'
+            },
+            
+            '& svg': {
+                fill: 'currentColor'
+            }
         },
 
         header: {
@@ -82,7 +116,11 @@ const useStyles = makeStyles()(theme => {
             display: 'flex',
             height: '60px',
             padding: `0 ${participantsPaneTheme.panePadding}px`,
-            justifyContent: 'flex-end'
+            justifyContent: 'flex-end',
+            borderBottom: '1px solid var(--border-color, rgba(255, 255, 255, 0.1))',
+            backgroundColor: 'var(--surface-color, rgba(28, 32, 37, 0.3))',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease'
         },
 
         antiCollapse: {
@@ -101,14 +139,43 @@ const useStyles = makeStyles()(theme => {
             display: 'flex',
             justifyContent: 'flex-end',
             padding: `${theme.spacing(4)} ${participantsPaneTheme.panePadding}px`,
+            borderTop: '1px solid var(--border-color, rgba(255, 255, 255, 0.1))',
+            backgroundColor: 'var(--surface-color, rgba(28, 32, 37, 0.3))',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease',
 
             '& > *:not(:last-child)': {
                 marginRight: theme.spacing(3)
+            },
+
+            '& button': {
+                borderRadius: '24px',
+                transition: 'all 0.2s ease',
+                
+                '&:hover': {
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+                }
             }
         },
 
         footerMoreContainer: {
-            position: 'relative'
+            position: 'relative',
+
+            '& button': {
+                width: '40px',
+                height: '40px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                backgroundColor: 'var(--button-background, rgba(255, 255, 255, 0.1))',
+
+                '&:hover': {
+                    backgroundColor: 'var(--button-background-hover, rgba(255, 255, 255, 0.2))'
+                }
+            }
         }
     };
 });
@@ -165,10 +232,12 @@ const ParticipantsPane = () => {
     return (
         <div className = { cx('participants_pane', classes.participantsPane) }>
             <div className = { classes.header }>
-                <ClickableIcon
-                    accessibilityLabel = { t('participantsPane.close', 'Close') }
-                    icon = { IconCloseLarge }
-                    onClick = { onClosePane } />
+                <div className = { classes.closeButton }>
+                    <ClickableIcon
+                        accessibilityLabel = { t('participantsPane.close', 'Close') }
+                        icon = { IconCloseLarge }
+                        onClick = { onClosePane } />
+                </div>
             </div>
             <div className = { classes.container }>
                 <VisitorsList />
@@ -209,6 +278,5 @@ const ParticipantsPane = () => {
         </div>
     );
 };
-
 
 export default ParticipantsPane;

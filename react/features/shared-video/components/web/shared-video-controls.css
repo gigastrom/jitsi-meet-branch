@@ -1,0 +1,146 @@
+.shared-video-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.shared-video-container.pip-mode {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: box-shadow 0.3s ease;
+    overflow: visible;
+    /* Allow for control elements outside the container */
+}
+
+.shared-video-container.pip-mode:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6) !important;
+}
+
+.shared-video-title-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-size: 14px;
+    z-index: 2;
+    /* Ensure it's above the YouTube iframe */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.shared-video-container:hover .shared-video-title-bar {
+    opacity: 1;
+}
+
+.shared-video-pip-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+    transition: background-color 0.2s;
+}
+
+.shared-video-pip-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.shared-video-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 30px;
+    z-index: 2;
+    /* Ensure it's above the YouTube iframe */
+    transition: opacity 0.3s;
+}
+
+.shared-video-control-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 18px;
+    transition: background-color 0.2s;
+}
+
+.shared-video-control-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.shared-video-controls button:last-child {
+    margin-left: 5px;
+}
+
+
+/* Hide default controls until hovered for regular videos */
+
+.shared-video-container.pip-mode .jw-controls {
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.shared-video-container.pip-mode:hover .jw-controls {
+    opacity: 1;
+}
+
+
+/* Fix for player elements */
+
+.shared-video-container.pip-mode video,
+.shared-video-container.pip-mode iframe,
+.shared-video-container.pip-mode .jw-video,
+.shared-video-container.pip-mode .jw-preview {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+/* Help with dragging */
+
+.shared-video-container.pip-mode {
+    cursor: move;
+}
+
+.shared-video-container.pip-mode iframe,
+.shared-video-container.pip-mode video {
+    pointer-events: none;
+}
+
+.shared-video-container.pip-mode:hover iframe,
+.shared-video-container.pip-mode:hover video {
+    pointer-events: auto;
+}
+
+.shared-video-container.pip-mode .shared-video-controls,
+.shared-video-container.pip-mode .shared-video-title-bar {
+    pointer-events: auto;
+}
+
+.disable-pointer {
+    pointer-events: none;
+}

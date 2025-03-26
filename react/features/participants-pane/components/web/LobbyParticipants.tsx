@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
+import { IReduxState } from '../../../app/types';
 import Avatar from '../../../base/avatar/components/Avatar';
 import Icon from '../../../base/icons/components/Icon';
 import { IconCheck, IconCloseLarge } from '../../../base/icons/svg';
@@ -16,7 +17,7 @@ import { useLobbyActions, useParticipantDrawer } from '../../hooks';
 
 import LobbyParticipantItems from './LobbyParticipantItems';
 
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()((theme: any) => {
     return {
         drawerActions: {
             listStyleType: 'none',
@@ -43,94 +44,132 @@ const useStyles = makeStyles()(theme => {
             marginRight: 16
         },
         headingContainer: {
-            alignItems: 'center',
-            display: 'flex',
-            justifyContent: 'space-between'
+            marginTop: theme.spacing(3),
+            position: 'relative'
         },
         heading: {
-            ...withPixelLineHeight(theme.typography.bodyShortBold),
-            color: theme.palette.text02
+            color: 'var(--text-color, #fff)',
+            margin: 0,
+            padding: 0,
+            fontSize: '16px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
         },
+        
+        headingCount: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'var(--accent-color, #246FE5)',
+            color: 'var(--button-text-color, #fff)',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            padding: '2px 8px',
+            marginLeft: '8px',
+            minWidth: '20px'
+        },
+
         link: {
             ...withPixelLineHeight(theme.typography.labelBold),
             color: theme.palette.link01,
-            cursor: 'pointer'
+            cursor: 'pointer',
+            display: 'inline-block',
+            marginTop: theme.spacing(1),
+            textDecoration: 'none',
+
+            '&:hover': {
+                textDecoration: 'underline'
+            },
+
+            '&:focus': {
+                textDecoration: 'underline'
+            }
+        },
+
+        emptyMessage: {
+            color: theme.palette.text02,
+            position: 'relative',
+            padding: theme.spacing(2),
+            background: `${theme.palette.ui04}20`,
+            borderRadius: '6px',
+            textAlign: 'center',
+            fontSize: '14px',
+            marginBottom: theme.spacing(2)
+        },
+        
+        participantsContainer: {
+            borderRadius: '8px',
+            overflow: 'hidden',
+            background: 'var(--surface-color, rgba(28, 32, 37, 0.3))',
+            padding: theme.spacing(1),
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            transition: 'background-color 0.2s ease',
+            
+            '&:hover': {
+                backgroundColor: 'var(--surface-hover-color, rgba(28, 32, 37, 0.4))'
+            }
         }
     };
 });
 
-/**
- * Component used to display a list of participants waiting in the lobby.
- *
- * @returns {ReactNode}
- */
-export default function LobbyParticipants() {
+interface IProps {
+    lobbyEnabled?: boolean;
+    participants?: Array<Object>;
+}
+
+const LobbyParticipants = () => {
+    const dispatch = useDispatch();
+    const { t } = useTranslation();
+    const { classes: styles } = useStyles();
+    
     const lobbyEnabled = useSelector(getLobbyEnabled);
     const participants = useSelector(getKnockingParticipants);
-    const { t } = useTranslation();
-    const { classes } = useStyles();
-    const dispatch = useDispatch();
+    
     const admitAll = useCallback(() => {
-        dispatch(admitMultiple(participants));
-    }, [ dispatch, participants ]);
-    const overflowDrawer = useSelector(showOverflowDrawer);
-    const [ drawerParticipant, closeDrawer, openDrawerForParticipant ] = useParticipantDrawer();
-    const [ admit, reject ] = useLobbyActions(drawerParticipant, closeDrawer);
+        if (participants) {
+            dispatch(admitMultiple(participants));
+        }
+    }, [dispatch, participants]);
 
-    if (!lobbyEnabled || !participants.length) {
+    if (!lobbyEnabled || !participants?.length) {
         return null;
     }
 
+    const showAdmitAll = participants.length > 1;
+
     return (
-        <>
-            <div className = { classes.headingContainer }>
-                <div className = { classes.heading }>
-                    {t('participantsPane.headings.lobby', { count: participants.length })}
+        <div>
+            <div className = { styles.headingContainer }>
+                <div className = { styles.heading }>
+                    <span>{t('participantsPane.headings.lobby', { count: participants.length })}</span>
+                    <span className = { styles.headingCount }>{participants.length}</span>
                 </div>
-                {
-                    participants.length > 1
-                    && <div
-                        className = { classes.link }
-                        onClick = { admitAll }>{t('participantsPane.actions.admitAll')}</div>
-                }
             </div>
-            <LobbyParticipantItems
-                openDrawerForParticipant = { openDrawerForParticipant }
-                overflowDrawer = { overflowDrawer }
-                participants = { participants } />
-            <JitsiPortal>
-                <Drawer
-                    isOpen = { Boolean(drawerParticipant && overflowDrawer) }
-                    onClose = { closeDrawer }>
-                    <ul className = { classes.drawerActions }>
-                        <li className = { classes.drawerItem }>
-                            <Avatar
-                                className = { classes.icon }
-                                participantId = { drawerParticipant?.participantID }
-                                size = { 20 } />
-                            <span>{ drawerParticipant?.displayName }</span>
-                        </li>
-                        <li
-                            className = { classes.drawerItem }
-                            onClick = { admit }>
-                            <Icon
-                                className = { classes.icon }
-                                size = { 20 }
-                                src = { IconCheck } />
-                            <span>{ t('participantsPane.actions.admit') }</span>
-                        </li>
-                        <li
-                            className = { classes.drawerItem }
-                            onClick = { reject }>
-                            <Icon
-                                className = { classes.icon }
-                                size = { 20 }
-                                src = { IconCloseLarge } />
-                            <span>{ t('participantsPane.actions.reject')}</span>
-                        </li>
-                    </ul>
-                </Drawer>
-            </JitsiPortal>
-        </>
+            
+            {showAdmitAll && (
+                <a
+                    className = { styles.link }
+                    onClick = { admitAll }>
+                    {t('participantsPane.actions.admitAll')}
+                </a>
+            )}
+            
+            {participants.length === 0 ? (
+                <div className = { styles.emptyMessage }>
+                    {t('participantsPane.lobby.empty')}
+                </div>
+            ) : (
+                <div className = { styles.participantsContainer }>
+                    <LobbyParticipantItems 
+                        lobbyParticipants = { participants }
+                        openDrawerForParticipant = { () => {} } />
+                </div>
+            )}
+        </div>
     );
-}
+};
+
+export default LobbyParticipants;

@@ -114,35 +114,42 @@ const useStyles = makeStyles()(theme => {
             alignItems: 'center',
             cursor: 'pointer',
             display: 'flex',
-            minHeight: '40px',
+            minHeight: '44px',
             padding: '10px 16px',
             boxSizing: 'border-box',
+            position: 'relative',
+            transition: 'all 0.15s ease',
+            borderLeft: '3px solid transparent',
 
             '& > *:not(:last-child)': {
                 marginRight: theme.spacing(3)
             },
 
             '&:hover': {
-                backgroundColor: theme.palette.ui02
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                transform: 'translateX(2px)'
             },
 
             '&:active': {
-                backgroundColor: theme.palette.ui03
+                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                transform: 'translateX(2px) scale(0.98)'
             },
 
             '&.focus-visible': {
-                boxShadow: `inset 0 0 0 2px ${theme.palette.action01Hover}`
+                boxShadow: `inset 0 0 0 2px ${theme.palette.action01Hover}`,
+                outline: 'none'
             }
         },
 
         selected: {
             borderLeft: `3px solid ${theme.palette.action01Hover}`,
             paddingLeft: '13px',
-            backgroundColor: theme.palette.ui02
+            backgroundColor: 'rgba(255, 255, 255, 0.08)'
         },
 
         contextMenuItemDisabled: {
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            opacity: 0.6
         },
 
         contextMenuItemIconDisabled: {
@@ -164,10 +171,21 @@ const useStyles = makeStyles()(theme => {
         },
 
         contextMenuItemDrawer: {
-            padding: '13px 16px'
+            padding: '14px 18px',
+            borderRadius: '8px',
+            margin: '0 8px 4px 8px',
+            
+            '&:last-child': {
+                marginBottom: '8px'
+            }
         },
 
         contextMenuItemIcon: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'transform 0.2s ease',
+            
             '& svg': {
                 fill: theme.palette.icon01
             }
@@ -175,11 +193,14 @@ const useStyles = makeStyles()(theme => {
 
         text: {
             ...withPixelLineHeight(theme.typography.bodyShortRegular),
-            color: theme.palette.text01
+            color: theme.palette.text01,
+            fontWeight: 500,
+            flex: 1
         },
 
         drawerText: {
-            ...withPixelLineHeight(theme.typography.bodyShortRegularLarge)
+            ...withPixelLineHeight(theme.typography.bodyShortRegularLarge),
+            fontWeight: 500
         }
     };
 });

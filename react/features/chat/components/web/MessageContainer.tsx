@@ -1,6 +1,7 @@
 import { throttle } from 'lodash-es';
 import React, { RefObject } from 'react';
 import { scrollIntoView } from 'seamless-scroll-polyfill';
+import { makeStyles } from 'tss-react/mui';
 
 import { MESSAGE_TYPE_LOCAL, MESSAGE_TYPE_REMOTE } from '../../constants';
 import AbstractMessageContainer, { IProps } from '../AbstractMessageContainer';
@@ -25,6 +26,18 @@ interface IState {
      */
     lastReadMessageId: string | null;
 }
+
+const styles = {
+    messagesContainer: {
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+        color: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        overflowY: 'auto',
+        padding: '10px 16px'
+    }
+};
 
 /**
  * Displays all received chat messages, grouped by sender.
@@ -91,29 +104,30 @@ export default class MessageContainer extends AbstractMessageContainer<IProps, I
 
             return (
                 <ChatMessageGroup
-                    className = { messageType || MESSAGE_TYPE_REMOTE }
-                    key = { index }
-                    messages = { group } />
+                    className={messageType || MESSAGE_TYPE_REMOTE}
+                    key={index}
+                    messages={group} />
             );
         });
 
         return (
-            <div id = 'chat-conversation-container'>
+            <div id="chat-conversation-container">
                 <div
-                    aria-labelledby = 'chat-header'
-                    id = 'chatconversation'
-                    onScroll = { this._onChatScroll }
-                    ref = { this._messageListRef }
-                    role = 'log'
-                    tabIndex = { 0 }>
-                    { messages }
+                    style={styles.messagesContainer}
+                    aria-labelledby="chat-header"
+                    id="chatconversation"
+                    onScroll={this._onChatScroll}
+                    ref={this._messageListRef}
+                    role="log"
+                    tabIndex={0}>
+                    {messages}
 
-                    { !this.state.isScrolledToBottom && this.state.hasNewMessages
+                    {!this.state.isScrolledToBottom && this.state.hasNewMessages
                         && <NewMessagesButton
-                            onGoToFirstUnreadMessage = { this._onGoToFirstUnreadMessage } /> }
+                            onGoToFirstUnreadMessage={this._onGoToFirstUnreadMessage} />}
                     <div
-                        id = 'messagesListEnd'
-                        ref = { this._messagesListEndRef } />
+                        id="messagesListEnd"
+                        ref={this._messagesListEndRef} />
                 </div>
             </div>
         );

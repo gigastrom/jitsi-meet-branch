@@ -1,0 +1,150 @@
+/**
+ * Custom CSS for here.fm style UI with circular video bubbles
+ */
+
+// Hide large video container content but keep the container for background
+#largeVideoContainer {
+    background-color: var(--defaultBackground, #f5f5f5) !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    pointer-events: none !important; // Prevent large video container from capturing clicks
+    // Hide the video element inside
+    #largeVideo {
+        display: none !important;
+    }
+}
+
+// Make sure no overlays block dragging
+#remoteVideos,
+#filmstripRemoteVideos,
+#filmstripLocalVideo {
+    pointer-events: auto !important; // Ensure these elements can receive mouse events
+}
+
+// Make large video wrapper not block events
+#largeVideoWrapper {
+    pointer-events: none !important; // Don't block mouse events
+}
+
+// Hide dominantSpeaker elements
+#dominantSpeaker,
+#dominantSpeakerAvatarContainer {
+    display: none !important;
+}
+
+// Make thumbnails circular and draggable with very high z-index
+.filmstrip {
+    &__videos {
+        .videocontainer {
+            border-radius: 50% !important;
+            overflow: hidden !important;
+            cursor: move !important; // Cursor indicates draggable
+            position: absolute !important; // Required for free positioning
+            z-index: 9999 !important; // Extremely high z-index to ensure they're on top
+            video {
+                object-fit: cover !important;
+            }
+        }
+    }
+}
+
+#filmstripLocalVideo,
+#filmstripRemoteVideos {
+    .videocontainer {
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+        border: 2px solid white !important;
+        margin: 10px !important;
+        video {
+            object-fit: cover !important;
+        }
+    }
+}
+
+// Make sure video containers are draggable
+.videocontainer {
+    z-index: 9999 !important; // Extremely high z-index
+    pointer-events: auto !important; // Make sure it receives mouse events
+}
+
+// Remove fixed positioning for filmstrip container to allow free movement
+#filmstripContainer {
+    position: static !important; // Change from absolute to static
+    z-index: 5 !important;
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: none !important; // Don't block mouse events
+}
+
+// Allow videos to be positioned anywhere in the viewport
+.filmstrip {
+    position: static !important; // Remove fixed positioning
+    width: 100% !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    pointer-events: none !important; // Allow clicking through the container
+    &__videos {
+        position: static !important;
+        pointer-events: auto !important; // Re-enable pointer events for videos
+    }
+}
+
+// Remove bottom positioning to allow free placement
+.horizontal-filmstrip .filmstrip {
+    position: static !important; // Override fixed positioning
+    bottom: auto !important;
+}
+
+// Hide some UI elements for cleaner look
+#videoconference_page {
+    .subject {
+        display: none !important;
+    }
+}
+
+// Style thumbnails for circular appearance and draggability
+.filmstrip__videos .videocontainer {
+    border-radius: 50% !important;
+    height: 120px !important;
+    width: 120px !important;
+    position: absolute !important; // Make absolutely positioned
+    transition: none !important; // Remove transitions for smooth dragging
+    // Initial positions - will be overridden by JS
+    &#filmstripLocalVideoContainer {
+        bottom: 80px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+    video {
+        height: 120px !important;
+        width: 120px !important;
+        object-fit: cover !important;
+    }
+}
+
+// Add background selection panel
+.background-selector {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    .background-option {
+        width: 60px;
+        height: 40px;
+        margin: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        &:hover {
+            transform: scale(1.05);
+        }
+        &.active {
+            border: 2px solid #4c9aff;
+        }
+    }
+}

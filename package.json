@@ -118,6 +118,7 @@
     "redux-thunk": "2.4.1",
     "seamless-scroll-polyfill": "2.1.8",
     "semver": "7.5.4",
+    "stipop-react-sdk": "^1.2.6-beta.1",
     "text-encoding": "0.7.0",
     "tss-react": "4.9.4",
     "util": "0.12.1",

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { batch, useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 
 import { ACTION_SHORTCUT_TRIGGERED, createShortcutEvent } from '../analytics/AnalyticsEvents';
 import { sendAnalytics } from '../analytics/functions';
@@ -49,6 +50,7 @@ import { useSharedVideoButton } from '../shared-video/hooks';
 import SpeakerStats from '../speaker-stats/components/web/SpeakerStats';
 import { isSpeakerStatsDisabled } from '../speaker-stats/functions';
 import { useSpeakerStatsButton } from '../speaker-stats/hooks.web';
+import { StickerButton } from '../stickers/components/web';
 import { useClosedCaptionButton } from '../subtitles/hooks.web';
 import { toggleTileView } from '../video-layout/actions.any';
 import { shouldDisplayTileView } from '../video-layout/functions.web';
@@ -71,6 +73,7 @@ import ToggleCameraButton from './components/web/ToggleCameraButton';
 import VideoSettingsButton from './components/web/VideoSettingsButton';
 import { isButtonEnabled, isDesktopShareButtonDisabled } from './functions.web';
 import { ICustomToolbarButton, IToolboxButton, ToolbarButton } from './types';
+import { isToolboxVisible } from './functions.web';
 
 
 const microphone = {
@@ -292,6 +295,13 @@ export function useToolboxButtons(
     const feedback = useFeedbackButton();
     const _download = useDownloadButton();
     const _help = useHelpButton();
+    
+    // Create a stickers button
+    const stickers = {
+        Content: StickerButton,
+        group: 2,
+        key: 'stickers'
+    };
 
     const buttons: { [key in ToolbarButton]?: IToolboxButton; } = {
         microphone,
@@ -324,7 +334,8 @@ export function useToolboxButtons(
         embedmeeting: embed,
         feedback,
         download: _download,
-        help: _help
+        help: _help,
+        stickers
     };
     const buttonKeys = Object.keys(buttons) as ToolbarButton[];
 
@@ -352,8 +363,10 @@ export function useToolboxButtons(
 }
 
 
-export const useKeyboardShortcuts = (toolbarButtons: Array<string>) => {
+export function useKeyboardShortcuts(toolbarButtons?: Array<string>) {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
+    const toolbarVisible = useSelector(isToolboxVisible);
     const _isSpeakerStatsDisabled = useSelector(isSpeakerStatsDisabled);
     const _isParticipantsPaneEnabled = useSelector(isParticipantsPaneEnabled);
     const _shouldDisplayReactionsButtons = useSelector(shouldDisplayReactionsButtons);
@@ -515,10 +528,23 @@ export const useKeyboardShortcuts = (toolbarButtons: Array<string>) => {
             'speaker.stats'
         ));
 
-        dispatch(toggleDialog(SpeakerStats, {
-            conference: APP.conference
-        }));
+        dispatch(toggleDialog(SpeakerStats));
     }
+
+    // Add a keyboard shortcut for hiding/showing all toolbars
+    useEffect(() => {
+        dispatch(registerShortcut({
+            character: 'H',
+            helpDescription: t('keyboardShortcuts.toggleAllToolbars'),
+            handler: () => {
+                dispatch(setToolboxVisible(!toolbarVisible));
+            }
+        }));
+
+        return () => {
+            dispatch(unregisterShortcut('H'));
+        };
+    }, [dispatch, toolbarVisible]);
 
     useEffect(() => {
         const KEYBOARD_SHORTCUTS = [
@@ -639,4 +665,4 @@ export const useKeyboardShortcuts = (toolbarButtons: Array<string>) => {
         screenSharing,
         tileViewEnabled
     ]);
-};
+}

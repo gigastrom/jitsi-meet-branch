@@ -79,7 +79,27 @@ const useStyles = makeStyles()(theme => {
             }
         },
 
-        primary: {},
+        primary: {
+            background: 'var(--accent-color, #246FE5)',
+            color: 'var(--button-text-color, #FFF)',
+            border: '1px solid var(--accent-color, #246FE5)',
+            
+            '&:hover': {
+                background: 'var(--accent-hover-color, #1a5bbf)'
+            },
+            
+            '&:active': {
+                background: 'var(--accent-active-color, #134a9e)'
+            },
+            
+            '&:focus': {
+                background: 'var(--accent-hover-color, #1a5bbf)'
+            },
+            
+            '&:disabled': {
+                background: 'var(--accent-disabled-color, rgba(36, 111, 229, 0.5))'
+            }
+        },
 
         secondary: {
             backgroundColor: theme.palette.action02,

@@ -134,10 +134,11 @@ const MAX_HEIGHT = 400;
 const useStyles = makeStyles()(theme => {
     return {
         contextMenu: {
-            backgroundColor: theme.palette.ui01,
-            border: `1px solid ${theme.palette.ui04}`,
-            borderRadius: `${Number(theme.shape.borderRadius)}px`,
-            boxShadow: '0px 1px 2px rgba(41, 41, 41, 0.25)',
+            backgroundColor: 'rgba(42, 44, 53, 0.92)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15)',
             color: theme.palette.text01,
             ...withPixelLineHeight(theme.typography.bodyShortRegular),
             marginTop: '48px',
@@ -147,22 +148,40 @@ const useStyles = makeStyles()(theme => {
             zIndex: 2,
             maxHeight: `${MAX_HEIGHT}px`,
             overflowY: 'auto',
-            padding: `${theme.spacing(2)} 0`
+            padding: `${theme.spacing(2)} 0`,
+            transition: 'all 0.2s ease',
+            transform: 'translateY(0)',
+            opacity: 1
         },
 
         contextMenuHidden: {
             pointerEvents: 'none',
-            visibility: 'hidden'
+            visibility: 'hidden',
+            opacity: 0,
+            transform: 'translateY(-8px)'
         },
 
         drawer: {
             paddingTop: '16px',
+            borderRadius: '12px 12px 0 0',
+            overflow: 'hidden',
 
             '& > div': {
                 ...withPixelLineHeight(theme.typography.bodyShortRegularLarge),
+                position: 'relative',
+                transition: 'all 0.2s ease',
+
+                '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                },
 
                 '& svg': {
-                    fill: theme.palette.icon01
+                    fill: theme.palette.icon01,
+                    transition: 'transform 0.2s ease'
+                },
+                
+                '&:active svg': {
+                    transform: 'scale(0.95)'
                 }
             }
         }

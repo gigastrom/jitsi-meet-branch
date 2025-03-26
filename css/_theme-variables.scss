@@ -1,0 +1,165 @@
+// Theme variables
+:root {
+    // Default theme (dark)
+    --background-color: rgba(28, 32, 37, 0.95);
+    --surface-color: rgba(28, 32, 37, 0.3);
+    --surface-hover-color: rgba(28, 32, 37, 0.4);
+    --surface-focus-color: rgba(28, 32, 37, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-color: #fff;
+    --text-color-hover: rgba(255, 255, 255, 0.8);
+    --text-secondary-color: rgba(255, 255, 255, 0.7);
+    --accent-color: #246FE5;
+    --accent-hover-color: #1a5bbf;
+    --accent-active-color: #134a9e;
+    --accent-disabled-color: rgba(36, 111, 229, 0.5);
+    --button-background: rgba(255, 255, 255, 0.1);
+    --button-background-hover: rgba(255, 255, 255, 0.2);
+    --button-text-color: #fff;
+    --error-color: #F15454;
+    --error-background: rgba(241, 84, 84, 0.1);
+    --error-background-hover: rgba(241, 84, 84, 0.2);
+    --warning-color: #F1B800;
+    --warning-background: rgba(241, 184, 0, 0.1);
+    --warning-background-hover: rgba(241, 184, 0, 0.2);
+    --feature-color: #246FE5;
+    --feature-background: rgba(36, 111, 229, 0.1);
+    --feature-background-hover: rgba(36, 111, 229, 0.2);
+    --scroll-thumb-color: rgba(255, 255, 255, 0.2);
+    --scroll-thumb-hover-color: rgba(255, 255, 255, 0.3);
+    --item-hover-color: rgba(255, 255, 255, 0.1);
+    --indicator-background: rgba(255, 255, 255, 0.1);
+    --indicator-color: #fff;
+}
+
+// Light theme
+body.theme-light {
+    --background-color: rgba(248, 250, 252, 0.95);
+    --surface-color: rgba(248, 250, 252, 0.3);
+    --surface-hover-color: rgba(248, 250, 252, 0.4);
+    --surface-focus-color: rgba(248, 250, 252, 0.4);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-color: #333;
+    --text-color-hover: rgba(51, 51, 51, 0.8);
+    --text-secondary-color: rgba(0, 0, 0, 0.7);
+    --accent-color: #246FE5;
+    --accent-hover-color: #1a5bbf;
+    --accent-active-color: #134a9e;
+    --accent-disabled-color: rgba(36, 111, 229, 0.5);
+    --button-background: rgba(0, 0, 0, 0.05);
+    --button-background-hover: rgba(0, 0, 0, 0.1);
+    --button-text-color: #333;
+    --error-color: #E54F4F;
+    --error-background: rgba(229, 79, 79, 0.1);
+    --error-background-hover: rgba(229, 79, 79, 0.2);
+    --warning-color: #E8A800;
+    --warning-background: rgba(232, 168, 0, 0.1);
+    --warning-background-hover: rgba(232, 168, 0, 0.2);
+    --feature-color: #246FE5;
+    --feature-background: rgba(36, 111, 229, 0.1);
+    --feature-background-hover: rgba(36, 111, 229, 0.2);
+    --scroll-thumb-color: rgba(0, 0, 0, 0.2);
+    --scroll-thumb-hover-color: rgba(0, 0, 0, 0.3);
+    --item-hover-color: rgba(0, 0, 0, 0.05);
+    --indicator-background: rgba(0, 0, 0, 0.05);
+    --indicator-color: #333;
+}
+
+// Forest theme
+body.theme-forest {
+    --background-color: rgba(21, 43, 30, 0.95);
+    --surface-color: rgba(21, 43, 30, 0.3);
+    --surface-hover-color: rgba(21, 43, 30, 0.4);
+    --surface-focus-color: rgba(21, 43, 30, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-color: #E9F1EA;
+    --text-color-hover: rgba(233, 241, 234, 0.8);
+    --text-secondary-color: rgba(233, 241, 234, 0.7);
+    --accent-color: #4CAF50;
+    --accent-hover-color: #43A047;
+    --accent-active-color: #388E3C;
+    --accent-disabled-color: rgba(76, 175, 80, 0.5);
+    --button-background: rgba(255, 255, 255, 0.1);
+    --button-background-hover: rgba(255, 255, 255, 0.2);
+    --button-text-color: #E9F1EA;
+    --error-color: #F15454;
+    --error-background: rgba(241, 84, 84, 0.1);
+    --error-background-hover: rgba(241, 84, 84, 0.2);
+    --warning-color: #FFC107;
+    --warning-background: rgba(255, 193, 7, 0.1);
+    --warning-background-hover: rgba(255, 193, 7, 0.2);
+    --feature-color: #4CAF50;
+    --feature-background: rgba(76, 175, 80, 0.1);
+    --feature-background-hover: rgba(76, 175, 80, 0.2);
+    --scroll-thumb-color: rgba(255, 255, 255, 0.2);
+    --scroll-thumb-hover-color: rgba(255, 255, 255, 0.3);
+    --item-hover-color: rgba(255, 255, 255, 0.1);
+    --indicator-background: rgba(255, 255, 255, 0.1);
+    --indicator-color: #E9F1EA;
+}
+
+// Ocean theme
+body.theme-ocean {
+    --background-color: rgba(17, 43, 60, 0.95);
+    --surface-color: rgba(17, 43, 60, 0.3);
+    --surface-hover-color: rgba(17, 43, 60, 0.4);
+    --surface-focus-color: rgba(17, 43, 60, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-color: #E3F2FD;
+    --text-color-hover: rgba(227, 242, 253, 0.8);
+    --text-secondary-color: rgba(227, 242, 253, 0.7);
+    --accent-color: #03A9F4;
+    --accent-hover-color: #039BE5;
+    --accent-active-color: #0288D1;
+    --accent-disabled-color: rgba(3, 169, 244, 0.5);
+    --button-background: rgba(255, 255, 255, 0.1);
+    --button-background-hover: rgba(255, 255, 255, 0.2);
+    --button-text-color: #E3F2FD;
+    --error-color: #FF5252;
+    --error-background: rgba(255, 82, 82, 0.1);
+    --error-background-hover: rgba(255, 82, 82, 0.2);
+    --warning-color: #FFD54F;
+    --warning-background: rgba(255, 213, 79, 0.1);
+    --warning-background-hover: rgba(255, 213, 79, 0.2);
+    --feature-color: #03A9F4;
+    --feature-background: rgba(3, 169, 244, 0.1);
+    --feature-background-hover: rgba(3, 169, 244, 0.2);
+    --scroll-thumb-color: rgba(255, 255, 255, 0.2);
+    --scroll-thumb-hover-color: rgba(255, 255, 255, 0.3);
+    --item-hover-color: rgba(255, 255, 255, 0.1);
+    --indicator-background: rgba(255, 255, 255, 0.1);
+    --indicator-color: #E3F2FD;
+}
+
+// Sunset theme
+body.theme-sunset {
+    --background-color: rgba(55, 37, 48, 0.95);
+    --surface-color: rgba(55, 37, 48, 0.3);
+    --surface-hover-color: rgba(55, 37, 48, 0.4);
+    --surface-focus-color: rgba(55, 37, 48, 0.4);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-color: #FFE0E6;
+    --text-color-hover: rgba(255, 224, 230, 0.8);
+    --text-secondary-color: rgba(255, 224, 230, 0.7);
+    --accent-color: #FF5252;
+    --accent-hover-color: #FF4081;
+    --accent-active-color: #F50057;
+    --accent-disabled-color: rgba(255, 82, 82, 0.5);
+    --button-background: rgba(255, 255, 255, 0.1);
+    --button-background-hover: rgba(255, 255, 255, 0.2);
+    --button-text-color: #FFE0E6;
+    --error-color: #FF5252;
+    --error-background: rgba(255, 82, 82, 0.1);
+    --error-background-hover: rgba(255, 82, 82, 0.2);
+    --warning-color: #FFAB40;
+    --warning-background: rgba(255, 171, 64, 0.1);
+    --warning-background-hover: rgba(255, 171, 64, 0.2);
+    --feature-color: #FF5252;
+    --feature-background: rgba(255, 82, 82, 0.1);
+    --feature-background-hover: rgba(255, 82, 82, 0.2);
+    --scroll-thumb-color: rgba(255, 255, 255, 0.2);
+    --scroll-thumb-hover-color: rgba(255, 255, 255, 0.3);
+    --item-hover-color: rgba(255, 255, 255, 0.1);
+    --indicator-background: rgba(255, 255, 255, 0.1);
+    --indicator-color: #FFE0E6;
+}

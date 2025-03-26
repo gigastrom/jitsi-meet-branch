@@ -86,5 +86,5 @@ function NewMessagesButton({ onGoToFirstUnreadMessage, t }: INewMessagesButtonPr
         </div>
     );
 }
-
 export default translate(NewMessagesButton);
+

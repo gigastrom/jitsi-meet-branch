@@ -1,7 +1,7 @@
 import { IStore } from '../app/types';
 import { createVirtualBackgroundEffect } from '../stream-effects/virtual-background';
 
-import { BACKGROUND_ENABLED, SET_VIRTUAL_BACKGROUND } from './actionTypes';
+import { BACKGROUND_ENABLED, SET_VIRTUAL_BACKGROUND, SHARED_BACKGROUND_EVENT } from './actionTypes';
 import { VIRTUAL_BACKGROUND_TYPE } from './constants';
 import logger from './logger';
 import { IVirtualBackground } from './reducer';
@@ -101,5 +101,25 @@ export function toggleBlurredBackgroundEffect(videoTrack: any, blurType: 'slight
                 selectedThumbnail: blurType
             }, videoTrack));
         }
+    };
+}
+
+/**
+ * Creates an action for a shared background event.
+ *
+ * @param {Object} options - Options for the shared background.
+ * @param {string} options.backgroundId - ID of the background being shared.
+ * @param {boolean} options.enabled - Whether the shared background is enabled.
+ * @returns {{
+ *     type: SHARED_BACKGROUND_EVENT,
+ *     backgroundId: string,
+ *     enabled: boolean
+ * }}
+ */
+export function createSharedBackgroundEvent(options: { backgroundId: string; enabled: boolean }) {
+    return {
+        type: SHARED_BACKGROUND_EVENT,
+        backgroundId: options.backgroundId,
+        enabled: options.enabled
     };
 }

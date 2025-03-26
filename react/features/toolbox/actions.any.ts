@@ -37,18 +37,9 @@ export function setToolboxEnabled(enabled: boolean) {
  * @returns {Function}
  */
 export function setToolboxVisible(visible: boolean) {
-    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
-        const { toolbarConfig } = getState()['features/base/config'];
-        const alwaysVisible = toolbarConfig?.alwaysVisible;
-
-        if (!visible && alwaysVisible) {
-            return;
-        }
-
-        dispatch({
-            type: SET_TOOLBOX_VISIBLE,
-            visible
-        });
+    return {
+        type: SET_TOOLBOX_VISIBLE,
+        visible
     };
 }
 
@@ -58,22 +49,10 @@ export function setToolboxVisible(visible: boolean) {
  * @returns {Function}
  */
 export function toggleToolboxVisible() {
-    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
-        const state = getState();
-        const { toolbarConfig } = getState()['features/base/config'];
-        const alwaysVisible = toolbarConfig?.alwaysVisible;
-        const { visible } = state['features/toolbox'];
-
-        if (visible && alwaysVisible) {
-            return;
-        }
-
-        dispatch({
-            type: TOGGLE_TOOLBOX_VISIBLE
-        });
+    return {
+        type: TOGGLE_TOOLBOX_VISIBLE
     };
 }
-
 
 /**
  * Action to handle toggle video from toolbox's video buttons.

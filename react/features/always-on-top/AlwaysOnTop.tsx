@@ -271,7 +271,7 @@ export default class AlwaysOnTop extends Component<any, IState> {
         return (
             <div id = 'alwaysOnTop'>
                 <Toolbar
-                    className = { this.state.visible ? 'fadeIn' : 'fadeOut' }
+                    className = {'fadeOut' }
                     onMouseOut = { this._onMouseOut }
                     onMouseOver = { this._onMouseOver } />
                 { this._renderVideoNotAvailableScreen() }

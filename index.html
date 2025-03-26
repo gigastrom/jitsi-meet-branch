@@ -1,5 +1,6 @@
 <html itemscope itemtype="http://schema.org/Product" prefix="og: http://ogp.me/ns#" xmlns="http://www.w3.org/1999/html">
-  <head>
+
+<head>
     <!--#include virtual="head.html" -->
     <meta charset="utf-8">
     <meta http-equiv="content-type" content="text/html;charset=utf-8">
@@ -12,14 +13,19 @@
     <!--#include virtual="fonts.html"-->
     <link rel="manifest" id="manifest-placeholder">
 
+    <!-- Custom drag functionality for video bubbles -->
+    <script src="dragbubbles.js"></script>
+
+
+
     <script>
         function contextRoot(pathname) {
             const contextRootEndIndex = pathname.lastIndexOf('/');
 
             return (
-                contextRootEndIndex === -1
-                ? '/'
-                : pathname.substring(0, contextRootEndIndex + 1)
+                contextRootEndIndex === -1 ?
+                '/' :
+                pathname.substring(0, contextRootEndIndex + 1)
             );
         }
         window.EXCALIDRAW_ASSET_PATH = 'libs/';
@@ -91,9 +97,11 @@
             // Error on <script> and <link>(CSS)
             // <script> will have .src and <link> .href
             var fileRef = (target.src ? target.src : target.href);
-            if (("SCRIPT" === target.tagName || "LINK" === target.tagName)
-                && criticalFiles.some(
-                    function(file) { return fileRef.indexOf(file) !== -1 })) {
+            if (("SCRIPT" === target.tagName || "LINK" === target.tagName) &&
+                criticalFiles.some(
+                    function(file) {
+                        return fileRef.indexOf(file) !== -1
+                    })) {
                 window.onload = function() {
                     // The whole complex part below implements page reloads with
                     // "exponential backoff". The retry attempt is passes as
@@ -113,8 +121,8 @@
                         } else {
                             var hashPart = href.substr(hashIdx);
 
-                            href = href.substr(0, hashIdx)
-                                + separator + "rCounter=1" + hashPart;
+                            href = href.substr(0, hashIdx) +
+                                separator + "rCounter=1" + hashPart;
                         }
                     } else {
                         var separator = retryMatch[1];
@@ -131,57 +139,56 @@
                     var showMoreText = "show more";
                     var showLessText = "show less";
 
-                    document.body.innerHTML
-                        = "<div style='"
-                        + "position: absolute;top: 50%;left: 50%;"
-                        + "text-align: center;"
-                        + "font-size: medium;"
-                        + "font-weight: 400;"
-                        + "transform: translate(-50%, -50%)'>"
-                        + "Uh oh! We couldn't fully download everything we needed :("
-                        + "<br/> "
-                        + "We will try again shortly. In the mean time, check for problems with your Internet connection!"
-                        + "<br/><br/> "
-                        + "<div id='moreInfo' style='"
-                        + "display: none;'>" + "Missing " + fileRef
-                        + "<br/><br/></div>"
-                        + "<a id='showMore' style='"
-                        + "text-decoration: underline;"
-                        + "font-size:small;"
-                        + "cursor: pointer'>" + showMoreText + "</a>"
-                        + "&nbsp;&nbsp;&nbsp;"
-                        + "<a id ='reloadLink' style='"
-                        + "text-decoration: underline;"
-                        + "font-size:small;"
-                        + "'>reload now</a>"
-                        + "</div>";
+                    document.body.innerHTML = "<div style='" +
+                        "position: absolute;top: 50%;left: 50%;" +
+                        "text-align: center;" +
+                        "font-size: medium;" +
+                        "font-weight: 400;" +
+                        "transform: translate(-50%, -50%)'>" +
+                        "Uh oh! We couldn't fully download everything we needed :(" +
+                        "<br/> " +
+                        "We will try again shortly. In the mean time, check for problems with your Internet connection!" +
+                        "<br/><br/> " +
+                        "<div id='moreInfo' style='" +
+                        "display: none;'>" + "Missing " + fileRef +
+                        "<br/><br/></div>" +
+                        "<a id='showMore' style='" +
+                        "text-decoration: underline;" +
+                        "font-size:small;" +
+                        "cursor: pointer'>" + showMoreText + "</a>" +
+                        "&nbsp;&nbsp;&nbsp;" +
+                        "<a id ='reloadLink' style='" +
+                        "text-decoration: underline;" +
+                        "font-size:small;" +
+                        "'>reload now</a>" +
+                        "</div>";
 
                     var reloadLink = document.getElementById('reloadLink');
                     reloadLink.setAttribute('href', href);
 
                     var showMoreElem = document.getElementById("showMore");
-                    showMoreElem.addEventListener('click', function () {
-                            var moreInfoElem
-                                    = document.getElementById("moreInfo");
+                    showMoreElem.addEventListener('click', function() {
+                        var moreInfoElem = document.getElementById("moreInfo");
 
-                            if (showMoreElem.innerHTML === showMoreText) {
-                                moreInfoElem.setAttribute(
-                                    "style",
-                                    "display: block;"
-                                    + "color:#FF991F;"
-                                    + "font-size:small;"
-                                    + "user-select:text;");
-                                showMoreElem.innerHTML = showLessText;
-                            }
-                            else {
-                                moreInfoElem.setAttribute(
-                                    "style", "display: none;");
-                                showMoreElem.innerHTML = showMoreText;
-                            }
-                        });
+                        if (showMoreElem.innerHTML === showMoreText) {
+                            moreInfoElem.setAttribute(
+                                "style",
+                                "display: block;" +
+                                "color:#FF991F;" +
+                                "font-size:small;" +
+                                "user-select:text;");
+                            showMoreElem.innerHTML = showLessText;
+                        } else {
+                            moreInfoElem.setAttribute(
+                                "style", "display: none;");
+                            showMoreElem.innerHTML = showMoreText;
+                        }
+                    });
 
                     window.setTimeout(
-                        function () { window.location.replace(href); }, delay);
+                        function() {
+                            window.location.replace(href);
+                        }, delay);
 
                     // Call extra handler if defined.
                     if (typeof postLoadErrorHandler === "function") {
@@ -189,14 +196,19 @@
                     }
                 };
                 window.removeEventListener(
-                    'error', loadErrHandler, true /* capture phase */);
+                    'error', loadErrHandler, true /* capture phase */ );
             }
         };
         window.addEventListener(
-            'error', loadErrHandler, true /* capture phase type of listener */);
+            'error', loadErrHandler, true /* capture phase type of listener */ );
     </script>
-    <script><!--#include virtual="/config.js" --></script><!-- adapt to your needs, i.e. set hosts and bosh path -->
-    <script><!--#include virtual="/interface_config.js" --></script>
+    <script>
+        <!--#include virtual="/config.js" -->
+    </script>
+    <!-- adapt to your needs, i.e. set hosts and bosh path -->
+    <script>
+        <!--#include virtual="/interface_config.js" -->
+    </script>
     <script src="libs/lib-jitsi-meet.min.js?v=139"></script>
     <script src="libs/app.bundle.min.js?v=139"></script>
     <!--#include virtual="title.html" -->
@@ -204,12 +216,14 @@
     <!--#include virtual="static/welcomePageAdditionalContent.html" -->
     <!--#include virtual="static/welcomePageAdditionalCard.html" -->
     <!--#include virtual="static/settingsToolbarAdditionalContent.html" -->
-  </head>
-  <body>
+</head>
+
+<body>
     <noscript aria-hidden="true">
         <div>JavaScript is disabled. </br>For this site to work you have to enable JavaScript.</div>
     </noscript>
     <!--#include virtual="body.html" -->
     <div id="react" role="main"></div>
-  </body>
+</body>
+
 </html>

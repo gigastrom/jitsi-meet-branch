@@ -95,23 +95,63 @@ interface IProps extends WithTranslation {
     youText?: string;
 }
 
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()((theme: any) => {
     return {
+        container: {
+            display: 'flex',
+            flexDirection: 'column'
+        },
+
         nameContainer: {
             display: 'flex',
             flex: 1,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            flexDirection: 'column'
         },
 
         name: {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            color: 'var(--text-color, #fff)',
+            lineHeight: '24px',
+            fontSize: '14px',
+            fontWeight: 400,
+            marginLeft: '16px'
         },
 
         moderatorLabel: {
             ...withPixelLineHeight(theme.typography.labelBold),
-            color: theme.palette.text03
+            lineHeight: '16px',
+            backgroundColor: 'var(--feature-background, rgba(36, 111, 229, 0.1))',
+            color: 'var(--text-color, #fff)',
+            borderRadius: '4px',
+            padding: '2px 6px',
+            marginLeft: '8px',
+            fontSize: '10px',
+            textTransform: 'uppercase',
+            fontWeight: 600
+        },
+
+        audioVideo: {
+            display: 'flex',
+            justifyContent: 'center'
+        },
+
+        avtContainer: {
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center'
+        },
+
+        avtContent: {
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center'
+        },
+
+        white: {
+            color: 'var(--text-color, #fff)'
         },
 
         avatar: {

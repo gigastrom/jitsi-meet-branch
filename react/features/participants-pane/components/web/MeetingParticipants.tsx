@@ -26,12 +26,28 @@ import MeetingParticipantItems from './MeetingParticipantItems';
 const useStyles = makeStyles()(theme => {
     return {
         headingW: {
-            color: theme.palette.warning02
+            color: 'var(--text-color, #fff)'
         },
         heading: {
-            color: theme.palette.text02,
+            color: 'var(--text-color, #fff)',
             ...withPixelLineHeight(theme.typography.bodyShortBold),
             marginBottom: theme.spacing(3),
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '18px',
+            letterSpacing: '0.01em',
+            position: 'relative',
+            
+            '&::after': {
+                content: '""',
+                position: 'absolute',
+                bottom: '-10px',
+                left: '0',
+                width: '40px',
+                height: '3px',
+                background: 'var(--accent-color, #246FE5)',
+                borderRadius: '2px'
+            },
 
             [`@media(max-width: ${participantsPaneTheme.MD_BREAKPOINT})`]: {
                 ...withPixelLineHeight(theme.typography.bodyShortBoldLarge)
@@ -39,12 +55,43 @@ const useStyles = makeStyles()(theme => {
         },
 
         search: {
-            margin: `${theme.spacing(3)} 0`,
+            margin: `${theme.spacing(4)} 0`,
 
             '& input': {
                 textAlign: 'center',
-                paddingRight: '16px'
+                paddingRight: '16px',
+                borderRadius: '8px',
+                transition: 'all 0.2s',
+                backgroundColor: `${theme.palette.ui04}15`,
+                border: `1px solid ${theme.palette.ui04}30`,
+                
+                '&:focus': {
+                    backgroundColor: `${theme.palette.ui04}25`,
+                    border: `1px solid ${theme.palette.action01}50`,
+                    boxShadow: `0 0 0 2px ${theme.palette.action01}20`
+                }
             }
+        },
+        
+        participantCount: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'var(--accent-color, #246FE5)',
+            color: 'var(--button-text-color, #fff)',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            padding: '2px 8px',
+            marginLeft: '8px',
+            lineHeight: '16px'
+        },
+        
+        roomName: {
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '6px'
         }
     };
 });
@@ -116,14 +163,21 @@ function MeetingParticipants({
                 role = 'heading'>
                 { t('participantsPane.title') }
             </span>
-            <div className = { styles.heading }>
-                {currentRoom?.name
-                    ? `${currentRoom.name} (${participantsCount})`
-                    : t('participantsPane.headings.participantsList', { count: participantsCount })}
-                { currentRoom?.name && _isCurrentRoomRenamable
-                    && <RenameButton
-                        breakoutRoomJid = { currentRoom?.jid }
-                        name = { currentRoom?.name } /> }
+            <div className={styles.heading}>
+                {currentRoom?.name ? (
+                    <div className={styles.roomName}>
+                        {currentRoom.name}
+                        <span className={styles.participantCount}>{participantsCount}</span>
+                        {currentRoom?.name && _isCurrentRoomRenamable && (
+                            <RenameButton breakoutRoomJid={currentRoom?.jid} name={currentRoom?.name} />
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {t('participantsPane.headings.participantsList')}
+                        <span className={styles.participantCount}>{participantsCount}</span>
+                    </>
+                )}
             </div>
             {showInviteButton && <InviteButton />}
             <Input

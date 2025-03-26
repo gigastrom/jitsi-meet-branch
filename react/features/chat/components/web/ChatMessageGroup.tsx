@@ -1,8 +1,7 @@
-import clsx from 'clsx';
 import React from 'react';
 import { makeStyles } from 'tss-react/mui';
-
 import Avatar from '../../../base/avatar/components/Avatar';
+
 import { IMessage } from '../../types';
 
 import ChatMessage from './ChatMessage';
@@ -17,70 +16,65 @@ interface IProps {
     /**
      * The messages to display as a group.
      */
-    messages: Array<IMessage>;
+    messages: IMessage[];
 }
 
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()((theme) => {
     return {
         messageGroup: {
             display: 'flex',
-            flexDirection: 'column',
-            maxWidth: '100%',
-
-            '&.remote': {
-                maxWidth: 'calc(100% - 40px)' // 100% - avatar and margin
-            }
+            flexDirection: 'row',
+            margin: '10px 16px',
+            alignItems: 'flex-start'
         },
-
-        groupContainer: {
-            display: 'flex',
-
-            '&.local': {
-                justifyContent: 'flex-end',
-
-                '& .avatar': {
-                    display: 'none'
-                }
-            }
-        },
-
         avatar: {
-            margin: `${theme.spacing(1)} ${theme.spacing(2)} ${theme.spacing(3)} 0`,
-            position: 'sticky',
-            flexShrink: 0,
-            top: 0
+            marginRight: '10px',
+            marginTop: '4px',
+            flexShrink: 0
+        },
+        messagesContainer: {
+            display: 'flex',
+            flexDirection: 'column',
+            maxWidth: 'calc(100% - 40px)'
         }
     };
 });
 
-
-const ChatMessageGroup = ({ className = '', messages }: IProps) => {
+/**
+ * Component that renders a group of consecutive chat messages.
+ *
+ * @returns {React$Element<any>}
+ */
+export default function ChatMessageGroup(props: IProps) {
     const { classes } = useStyles();
-    const messagesLength = messages.length;
+    const { className, messages } = props;
 
-    if (!messagesLength) {
+    // If there are no messages, don't render anything
+    if (!messages.length) {
         return null;
     }
 
     return (
-        <div className = { clsx(classes.groupContainer, className) }>
+        <div className={classes.messageGroup}>
             <Avatar
-                className = { clsx(classes.avatar, 'avatar') }
-                participantId = { messages[0].participantId }
-                size = { 32 } />
-            <div className = { `${classes.messageGroup} chat-message-group ${className}` }>
-                {messages.map((message, i) => (
-                    <ChatMessage
-                        key = { i }
-                        message = { message }
-                        shouldDisplayChatMessageMenu = { false }
-                        showDisplayName = { i === 0 }
-                        showTimestamp = { i === messages.length - 1 }
-                        type = { className } />
-                ))}
+                className={classes.avatar}
+                participantId={messages[0].participantId}
+                size={32} />
+            <div className={classes.messagesContainer}>
+                {messages.map((message, i) => {
+                    const showDisplayName = i === 0;
+                    const showTimestamp = i === messages.length - 1;
+
+                    return (
+                        <ChatMessage
+                            key={i}
+                            message={message}
+                            showDisplayName={showDisplayName}
+                            showTimestamp={showTimestamp}
+                            type={className} />
+                    );
+                })}
             </div>
         </div>
     );
-};
-
-export default ChatMessageGroup;
+}

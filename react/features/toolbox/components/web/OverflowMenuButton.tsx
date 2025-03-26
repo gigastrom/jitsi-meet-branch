@@ -25,7 +25,7 @@ import { showOverflowDrawer } from '../../functions.web';
 
 import Drawer from './Drawer';
 import JitsiPortal from './JitsiPortal';
-import OverflowToggleButton from './OverflowToggleButton';
+import ModernOverflowButton from './ModernOverflowButton';
 
 /**
  * The type of the React {@code Component} props of {@link OverflowMenuButton}.
@@ -73,29 +73,52 @@ const useStyles = makeStyles<{ overflowDrawer: boolean; reactionsMenuHeight: num
     return {
         overflowMenuDrawer: {
             overflowY: 'scroll',
-            height: `calc(${DRAWER_MAX_HEIGHT})`
+            height: `calc(${DRAWER_MAX_HEIGHT})`,
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            padding: '8px 0'
         },
         contextMenu: {
             position: 'relative' as const,
             right: 'auto',
             margin: 0,
-            marginBottom: '8px',
+            marginBottom: '12px',
             maxHeight: overflowDrawer ? undefined : 'calc(100dvh - 100px)',
             paddingBottom: overflowDrawer ? undefined : 0,
-            minWidth: '240px',
+            minWidth: '260px',
             overflow: 'hidden'
         },
         content: {
             position: 'relative',
             maxHeight: overflowDrawer
                 ? `calc(100% - ${reactionsMenuHeight}px - 16px)` : `calc(100dvh - 100px - ${reactionsMenuHeight}px)`,
-            overflowY: 'auto'
+            overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent',
+            
+            '&::-webkit-scrollbar': {
+                width: '6px'
+            },
+            
+            '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '3px'
+            },
+            
+            '&::-webkit-scrollbar-track': {
+                backgroundColor: 'transparent'
+            }
         },
         footer: {
             position: 'absolute',
             bottom: 0,
             left: 0,
-            right: 0
+            right: 0,
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            paddingTop: '8px',
+            marginTop: '8px',
+            backgroundColor: 'rgba(42, 44, 53, 0.92)',
+            backdropFilter: 'blur(12px)'
         },
         reactionsPadding: {
             height: `${reactionsMenuHeight}px`
@@ -127,13 +150,17 @@ const OverflowMenuButton = ({
         onVisibilityChange(true);
     }, [ onVisibilityChange ]);
 
-    const onEscClick = useCallback((event: React.KeyboardEvent) => {
+    const onEscClick = useCallback((event?: React.KeyboardEvent) => {
+        if (!event) {
+            return;
+        }
+        
         if (event.key === 'Escape' && isOpen) {
             event.preventDefault();
             event.stopPropagation();
             onCloseDialog();
         }
-    }, [ onCloseDialog ]);
+    }, [ onCloseDialog, isOpen ]);
 
     const toggleDialogVisibility = useCallback(() => {
         sendAnalytics(createToolbarEvent('overflow'));
@@ -205,9 +232,10 @@ const OverflowMenuButton = ({
         return (
             <div className = 'toolbox-button-wth-dialog context-menu'>
                 <>
-                    <OverflowToggleButton
-                        handleClick = { toggleDialogVisibility }
+                    <ModernOverflowButton
+                        accessibilityLabel = { t(toolbarAccLabel) }
                         isOpen = { isOpen }
+                        onClick = { toggleDialogVisibility }
                         onKeyDown = { onEscClick } />
                     <JitsiPortal>
                         <Drawer
@@ -243,9 +271,10 @@ const OverflowMenuButton = ({
                 position = 'top'
                 trigger = 'click'
                 visible = { isOpen }>
-                <OverflowToggleButton
-                    isMenuButton = { true }
+                <ModernOverflowButton
+                    accessibilityLabel = { t(toolbarAccLabel) }
                     isOpen = { isOpen }
+                    onClick = { toggleDialogVisibility }
                     onKeyDown = { onEscClick } />
             </Popover>
             {showReactionsMenu && <div className = 'reactions-animations-container'>

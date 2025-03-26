@@ -82,7 +82,7 @@ interface IProps extends AbstractProps {
 const useStyles = makeStyles()(theme => {
     return {
         container: {
-            backgroundColor: theme.palette.ui01,
+            backgroundColor: 'var(--background-color, #2D0E57)',
             flexShrink: 0,
             overflow: 'hidden',
             position: 'relative',
@@ -115,11 +115,13 @@ const useStyles = makeStyles()(theme => {
             padding: `${theme.spacing(3)} ${theme.spacing(4)}`,
             alignItems: 'center',
             boxSizing: 'border-box',
-            color: theme.palette.text01,
+            color: '#ffffff',
+            backgroundColor: 'var(--background-color, #39176A)',
             ...withPixelLineHeight(theme.typography.heading6),
 
             '.jitsi-icon': {
-                cursor: 'pointer'
+                cursor: 'pointer',
+                color: '#ffffff'
             }
         },
 

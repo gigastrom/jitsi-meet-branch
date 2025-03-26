@@ -201,3 +201,15 @@ export function hideConfirmPlayingDialog() {
         dispatch(hideDialog(ShareVideoConfirmDialog));
     };
 }
+
+/**
+ * Sets the video link to play as shared video.
+ *
+ * @param {string} videoId - The YouTube video ID.
+ * @returns {Function}
+ */
+export function setVideoLink(videoId: string) {
+    return (dispatch: IStore['dispatch']) => {
+        dispatch(playSharedVideo(videoId));
+    };
+}

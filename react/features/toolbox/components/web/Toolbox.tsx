@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
@@ -42,21 +42,33 @@ interface IProps {
     toolbarButtons?: Array<string>;
 }
 
-const useStyles = makeStyles()(() => {
-    return {
-        hangupMenu: {
-            position: 'relative',
-            right: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            rowGap: '8px',
-            margin: 0,
-            padding: '16px',
-            marginBottom: '8px'
-        }
-    };
-});
+const useStyles = makeStyles()(theme => ({
+    hangupMenu: {
+        position: 'relative',
+        right: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        rowGap: '8px',
+        margin: 0,
+        padding: '16px',
+        marginBottom: '8px'
+    },
+    hidden: {
+        transform: 'translateY(200%)',
+        opacity: 0,
+        visibility: 'hidden',
+        position: 'absolute',
+        transition: 'all 0.3s ease-in-out',
+        pointerEvents: 'none'
+    },
+    toolbox: {
+        transition: 'all 0.3s ease-in-out',
+        position: 'relative',
+        bottom: 0
+    }
+}));
 
+// TOOLBOX
 /**
  * A component that renders the main toolbar.
  *
@@ -66,6 +78,7 @@ const useStyles = makeStyles()(() => {
 export default function Toolbox({
     toolbarButtons
 }: IProps) {
+    return null;
     const { classes, cx } = useStyles();
     const { t } = useTranslation();
     const dispatch = useDispatch();
@@ -213,6 +226,20 @@ export default function Toolbox({
         dispatch(setToolboxVisible(false));
     }, [ dispatch ]);
 
+    // Update the keyboard shortcut to toggle toolbar visibility
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            // Toggle toolbar with 'T' key
+            if (e.key === 't' || e.key === 'T') {
+                // Toggle toolbar visibility instead of just hiding it
+                dispatch(setToolboxVisible(!toolbarVisible));
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [dispatch, toolbarVisible]);  // Add toolbarVisible to dependencies
+
     if (iAmRecorder || iAmSipGateway) {
         return null;
     }
@@ -241,7 +268,12 @@ export default function Toolbox({
 
     return (
         <div
-            className = { cx(rootClassNames, shiftUp && 'shift-up') }
+            className = { cx(
+                rootClassNames,
+                shiftUp && 'shift-up',
+                classes.toolbox,
+                { [classes.hidden]: !toolbarVisible }
+            ) }
             id = 'new-toolbox'>
             <div className = { containerClassName }>
                 <div

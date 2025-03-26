@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { connect } from 'react-redux';
+import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../app/types';
 import { getSsrcRewritingFeatureFlag } from '../../../base/config/functions.any';
@@ -28,6 +29,7 @@ import {
     getQuickActionButtonType,
     participantMatchesSearch
 } from '../../functions';
+import { withPixelLineHeight } from '../../../base/styles/functions.web';
 
 import ParticipantActionEllipsis from './ParticipantActionEllipsis';
 import ParticipantItem from './ParticipantItem';
@@ -174,6 +176,171 @@ interface IProps {
      */
     youText: string;
 }
+
+const useStyles = makeStyles()((theme: any) => {
+    return {
+        participantItem: {
+            display: 'flex',
+            color: 'var(--text-color, #fff)',
+            alignItems: 'center',
+            padding: '12px 16px',
+            boxSizing: 'border-box',
+            borderRadius: '8px',
+            margin: '2px 8px',
+            width: 'calc(100% - 16px)',
+            transition: 'background-color 0.2s ease',
+            border: '1px solid var(--border-color, rgba(255, 255, 255, 0.1))',
+            backgroundColor: 'var(--surface-color, rgba(28, 32, 37, 0.3))',
+            backdropFilter: 'blur(8px)',
+            
+            '&:hover': {
+                backgroundColor: 'var(--surface-hover-color, rgba(28, 32, 37, 0.4))'
+            },
+
+            '&:focus': {
+                outline: 'none',
+                borderColor: 'var(--accent-color, #246FE5)',
+                backgroundColor: 'var(--surface-focus-color, rgba(28, 32, 37, 0.4))'
+            }
+        },
+
+        participantDetails: {
+            display: 'flex',
+            flex: 1,
+            overflow: 'hidden',
+            marginRight: theme.spacing(2),
+            alignItems: 'center'
+        },
+
+        name: {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            color: 'var(--text-color, #fff)',
+            marginLeft: theme.spacing(2),
+            lineHeight: '24px',
+            fontSize: '14px',
+            fontWeight: 500,
+            transition: 'color 0.2s ease'
+        },
+
+        moderator: {
+            color: 'var(--accent-color, #246FE5)',
+            fontWeight: 600
+        },
+
+        participantActions: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginLeft: 'auto'
+        },
+
+        participantAction: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'var(--button-background, rgba(255, 255, 255, 0.1))',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            color: 'var(--icon-color, #fff)',
+            padding: '8px',
+            width: '32px',
+            height: '32px',
+            border: '1px solid var(--border-color, rgba(255, 255, 255, 0.1))',
+            transition: 'all 0.2s ease',
+            backdropFilter: 'blur(4px)',
+
+            '&:hover': {
+                backgroundColor: 'var(--button-background-hover, rgba(255, 255, 255, 0.2))',
+                color: 'var(--icon-color-hover, #fff)',
+                transform: 'scale(1.05)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+            },
+
+            '&:active': {
+                transform: 'scale(0.95)'
+            }
+        },
+
+        raisedHand: {
+            backgroundColor: 'var(--warning-background, rgba(241, 184, 0, 0.2))',
+            color: 'var(--warning-color, #F1B800)',
+            border: '1px solid var(--warning-color, #F1B800)',
+
+            '&:hover': {
+                backgroundColor: 'var(--warning-background-hover, rgba(241, 184, 0, 0.3))'
+            }
+        },
+
+        isVirtualBackground: {
+            backgroundColor: 'var(--feature-background, rgba(36, 111, 229, 0.1))',
+            color: 'var(--feature-color, #246FE5)',
+            border: '1px solid var(--feature-color, #246FE5)',
+
+            '&:hover': {
+                backgroundColor: 'var(--feature-background-hover, rgba(36, 111, 229, 0.2))'
+            }
+        },
+
+        indicator: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '24px',
+            height: '24px',
+            borderRadius: '12px',
+            padding: '0 8px',
+            marginLeft: '8px',
+            backgroundColor: 'var(--indicator-background, rgba(255, 255, 255, 0.1))',
+            color: 'var(--indicator-color, #fff)',
+            fontSize: '12px',
+            fontWeight: 600,
+            transition: 'all 0.2s ease',
+            border: '1px solid var(--border-color, rgba(255, 255, 255, 0.1))',
+
+            '&:hover': {
+                transform: 'scale(1.05)'
+            }
+        },
+
+        audioMuted: {
+            backgroundColor: 'var(--error-background, rgba(241, 84, 84, 0.1))',
+            color: 'var(--error-color, #F15454)',
+            border: '1px solid var(--error-color, #F15454)',
+
+            '&:hover': {
+                backgroundColor: 'var(--error-background-hover, rgba(241, 84, 84, 0.2))'
+            }
+        },
+
+        videoMuted: {
+            backgroundColor: 'var(--warning-background, rgba(241, 184, 0, 0.1))',
+            color: 'var(--warning-color, #F1B800)',
+            border: '1px solid var(--warning-color, #F1B800)',
+
+            '&:hover': {
+                backgroundColor: 'var(--warning-background-hover, rgba(241, 184, 0, 0.2))'
+            }
+        },
+
+        dominantSpeaker: {
+            animation: '$pulse 2s infinite'
+        },
+
+        '@keyframes pulse': {
+            '0%': {
+                boxShadow: '0 0 0 0 rgba(36, 111, 229, 0.4)'
+            },
+            '70%': {
+                boxShadow: '0 0 0 8px rgba(36, 111, 229, 0)'
+            },
+            '100%': {
+                boxShadow: '0 0 0 0 rgba(36, 111, 229, 0)'
+            }
+        }
+    };
+});
 
 /**
  * Implements the MeetingParticipantItem component.

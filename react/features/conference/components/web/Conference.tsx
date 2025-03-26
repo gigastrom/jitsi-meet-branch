@@ -40,6 +40,9 @@ import {
 } from '../AbstractConference';
 import type { AbstractProps } from '../AbstractConference';
 
+// Import our custom BackgroundSelector component
+import BackgroundSelector from '../../../virtual-background/components/web/BackgroundSelector';
+
 import ConferenceInfo from './ConferenceInfo';
 import { default as Notice } from './Notice';
 
@@ -254,6 +257,7 @@ class Conference extends AbstractConference<IProps, any> {
                                 <MainFilmstrip />
                             </>)
                         }
+                        <BackgroundSelector />
                     </div>
 
                     { _showPrejoin || _showLobby || (

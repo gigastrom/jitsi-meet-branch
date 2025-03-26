@@ -1,41 +1,69 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { makeStyles } from 'tss-react/mui';
 
 import { isMobileBrowser } from '../../../environment/utils';
 import Icon from '../../../icons/components/Icon';
 
-interface IProps {
+export interface IProps {
+
+    /**
+     * Accessibility label.
+     */
     accessibilityLabel: string;
+
+    /**
+     * Whether the element is disabled or not.
+     */
+    disabled?: boolean;
+
+    /**
+     * Class name for additional styles.
+     */
     className?: string;
+
+    /**
+     * Click handler.
+     */
+    onClick?: (e?: React.MouseEvent) => void;
+
+    /**
+     * Keydown handler.
+     */
+    onKeyDown?: (e?: React.KeyboardEvent) => void;
+
+    /**
+     * Keypress handler.
+     */
+    onKeyPress?: (e?: React.KeyboardEvent) => void;
+
+    /**
+     * The icon to be rendered.
+     */
     icon: Function;
+
+    /**
+     * Unique identifier for the element.
+     */
     id?: string;
-    onClick: () => void;
 }
 
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()(() => {
     return {
-        button: {
-            padding: '2px',
-            backgroundColor: theme.palette.action03,
-            border: 0,
-            outline: 0,
-            borderRadius: `${theme.shape.borderRadius}px`,
+        container: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: 'var(--text-color, #fff)',
+            transition: 'color 0.2s ease',
 
             '&:hover': {
-                backgroundColor: theme.palette.ui02
+                color: 'var(--text-color-hover, rgba(255, 255, 255, 0.8))'
             },
 
-            '&.focus-visible': {
-                outline: 0,
-                boxShadow: `0px 0px 0px 2px ${theme.palette.focus01}`
-            },
-
-            '&:active': {
-                backgroundColor: theme.palette.ui03
-            },
-
-            '&.is-mobile': {
-                padding: '10px'
+            '&.disabled': {
+                cursor: 'default',
+                opacity: 0.5
             }
         }
     };
@@ -48,7 +76,7 @@ const ClickableIcon = ({ accessibilityLabel, className, icon, id, onClick }: IPr
     return (
         <button
             aria-label = { accessibilityLabel }
-            className = { cx(styles.button, isMobile && 'is-mobile', className) }
+            className = { cx(styles.container, isMobile && 'is-mobile', className) }
             id = { id }
             onClick = { onClick }>
             <Icon

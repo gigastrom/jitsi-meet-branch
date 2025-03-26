@@ -14,26 +14,40 @@ interface IProps {
     /**
      * The children of the component.
      */
-    children?: ReactNode;
+    children: ReactNode;
+
+    /**
+     * Additional CSS class names.
+     */
+    className?: string;
 }
 
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()(() => {
     return {
-        contextMenuItemGroup: {
-            '&:not(:empty)': {
-                padding: `${theme.spacing(2)} 0`
+        group: {
+            margin: '8px 0',
+            position: 'relative',
+            
+            '&:not(:last-child)': {
+                paddingBottom: '8px',
+                
+                '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '16px',
+                    right: '16px',
+                    height: '1px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                }
             },
-
-            '& + &:not(:empty)': {
-                borderTop: `1px solid ${theme.palette.ui03}`
+            
+            '&:first-child': {
+                marginTop: '4px'
             },
-
-            '&:first-of-type': {
-                paddingTop: 0
-            },
-
-            '&:last-of-type': {
-                paddingBottom: 0
+            
+            '&:last-child': {
+                marginBottom: '4px'
             }
         }
     };
@@ -41,12 +55,13 @@ const useStyles = makeStyles()(theme => {
 
 const ContextMenuItemGroup = ({
     actions,
-    children
+    children,
+    className
 }: IProps) => {
-    const { classes: styles } = useStyles();
+    const { classes, cx } = useStyles();
 
     return (
-        <div className = { styles.contextMenuItemGroup }>
+        <div className = { cx(classes.group, className) }>
             {children}
             {actions?.map(actionProps => (
                 <ContextMenuItem

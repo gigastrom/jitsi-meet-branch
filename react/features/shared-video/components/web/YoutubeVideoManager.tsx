@@ -11,6 +11,8 @@ import AbstractVideoManager, {
     _mapStateToProps
 } from './AbstractVideoManager';
 
+import './youtube-player.css';
+
 /**
  * Manager of shared video.
  *
@@ -202,7 +204,9 @@ class YoutubeVideoManager extends AbstractVideoManager {
                     'fs': '0',
                     'autoplay': 0,
                     'controls': showControls,
-                    'rel': 0
+                    'rel': 0,
+                    'modestbranding': 1, // Hide YouTube logo
+                    'disablekb': 1 // Disable keyboard controls to prevent issues in PiP mode
                 }
             },
             onError: (e: any) => this.onError(e),
@@ -221,8 +225,11 @@ class YoutubeVideoManager extends AbstractVideoManager {
      */
     override render() {
         return (
-            <YouTube
-                { ...this.getPlayerOptions() } />
+            <div className="youtube-player-container">
+                <YouTube
+                    className="youtube-player"
+                    { ...this.getPlayerOptions() } />
+            </div>
         );
     }
 }

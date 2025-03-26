@@ -83,35 +83,16 @@ interface IProps {
 const useStyles = makeStyles()(theme => {
     return {
         container: {
-            alignItems: 'center',
-            color: theme.palette.text01,
             display: 'flex',
-            ...withPixelLineHeight(theme.typography.bodyShortBold),
-            margin: `0 -${participantsPaneTheme.panePadding}px`,
-            padding: `${theme.spacing(2)} ${participantsPaneTheme.panePadding}px`,
-            position: 'relative',
-            boxShadow: 'inset 0px -1px 0px rgba(255, 255, 255, 0.15)',
-            minHeight: '40px',
+            boxSizing: 'border-box',
+            alignItems: 'center',
+            padding: '12px 16px',
+            borderRadius: '6px',
+            transition: 'background-color 0.2s ease',
+            width: '100%',
 
-            '&:hover, &:focus-within': {
-                backgroundColor: theme.palette.ui02,
-
-                '& .indicators': {
-                    display: 'none'
-                },
-
-                '& .actions': {
-                    display: 'flex',
-                    position: 'relative',
-                    top: 'auto',
-                    boxShadow: `-15px 0px 10px -5px ${theme.palette.ui02}`,
-                    backgroundColor: theme.palette.ui02
-                }
-            },
-
-            [`@media(max-width: ${participantsPaneTheme.MD_BREAKPOINT})`]: {
-                ...withPixelLineHeight(theme.typography.bodyShortBoldLarge),
-                padding: `${theme.spacing(3)} ${participantsPaneTheme.panePadding}px`
+            '&:hover': {
+                backgroundColor: 'var(--item-hover-color, rgba(255, 255, 255, 0.1))'
             }
         },
 

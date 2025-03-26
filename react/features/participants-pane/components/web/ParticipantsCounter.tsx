@@ -3,32 +3,51 @@ import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import { getParticipantCount } from '../../../base/participants/functions';
-import { withPixelLineHeight } from '../../../base/styles/functions.web';
 
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()((theme: any) => {
     return {
         badge: {
-            backgroundColor: theme.palette.ui03,
-            borderRadius: '100%',
-            height: '16px',
+            backgroundColor: 'var(--accent-color, #246FE5)',
+            borderRadius: '16px',
+            color: 'var(--text-color-accent, #FFFFFF)',
+            fontSize: '12px',
+            fontWeight: 600,
+            lineHeight: '16px',
             minWidth: '16px',
-            color: theme.palette.text01,
-            ...withPixelLineHeight(theme.typography.labelBold),
-            pointerEvents: 'none',
+            padding: '0 4px',
             position: 'absolute',
             right: '-4px',
-            top: '-3px',
+            top: '-4px',
             textAlign: 'center',
-            padding: '1px'
+            transition: 'all 0.2s ease',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+
+            '&:hover': {
+                transform: 'scale(1.1)',
+                boxShadow: '0 3px 6px rgba(0, 0, 0, 0.2)'
+            }
         }
     };
 });
 
+/**
+ * Component that renders the participant count badge.
+ *
+ * @returns {ReactElement}
+ */
 const ParticipantsCounter = () => {
+    const count = useSelector(getParticipantCount);
     const { classes } = useStyles();
-    const participantsCount = useSelector(getParticipantCount);
 
-    return <span className = { classes.badge }>{participantsCount}</span>;
+    if (count < 2) {
+        return null;
+    }
+
+    return (
+        <span className={classes.badge}>
+            {count}
+        </span>
+    );
 };
 
 export default ParticipantsCounter;

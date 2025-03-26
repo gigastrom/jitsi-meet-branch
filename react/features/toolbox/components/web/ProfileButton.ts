@@ -12,7 +12,8 @@ import { SETTINGS_TABS } from '../../../settings/constants';
 
 import ProfileButtonAvatar from './ProfileButtonAvatar';
 
-/**
+/** 
+ * b
  * The type of the React {@code Component} props of {@link ProfileButton}.
  */
 interface IProps extends AbstractButtonProps {

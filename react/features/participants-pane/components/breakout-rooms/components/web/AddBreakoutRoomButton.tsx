@@ -10,7 +10,23 @@ import { createBreakoutRoom } from '../../../../../breakout-rooms/actions';
 const useStyles = makeStyles()(theme => {
     return {
         button: {
-            marginTop: theme.spacing(3)
+            marginTop: theme.spacing(3),
+            borderRadius: '999px',
+            transition: 'all 0.2s',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.16)',
+            fontWeight: 600,
+            position: 'relative',
+            overflow: 'hidden',
+            
+            '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+            },
+            
+            '&:active': {
+                transform: 'translateY(0)',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)'
+            }
         }
     };
 });

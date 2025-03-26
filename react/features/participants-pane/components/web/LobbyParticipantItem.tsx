@@ -37,12 +37,15 @@ interface IProps {
 const useStyles = makeStyles()(theme => {
     return {
         button: {
-            marginRight: theme.spacing(2)
+            marginRight: theme.spacing(2),
+            transition: 'background-color 0.2s ease',
+            borderRadius: '6px'
         },
         moreButton: {
             paddingRight: '6px',
             paddingLeft: '6px',
-            marginRight: theme.spacing(2)
+            marginRight: theme.spacing(2),
+            transition: 'background-color 0.2s ease'
         },
         contextMenu: {
             position: 'fixed',

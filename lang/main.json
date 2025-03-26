@@ -141,7 +141,7 @@
         "buttonText": "Install Chrome Extension",
         "buttonTextEdge": "Install Edge Extension",
         "close": "Close",
-        "dontShowAgain": "Don’t show me this again",
+        "dontShowAgain": "Don't show me this again",
         "installExtensionText": "Install the extension for Google Calendar and Office 365 integration"
     },
     "connectingOverlay": {
@@ -220,8 +220,8 @@
         "joinInBrowser": "Join in browser",
         "launchMeetingLabel": "How do you want to join this meeting?",
         "launchWebButton": "Launch in web",
-        "noDesktopApp": "You don’t have the app?",
-        "noMobileApp": "You don’t have the app?",
+        "noDesktopApp": "You don't have the app?",
+        "noMobileApp": "You don't have the app?",
         "or": "OR",
         "termsAndConditions": "By continuing you agree to our <a href='{{termsAndConditionsLink}}' rel='noopener noreferrer' target='_blank'>terms & conditions.</a>",
         "title": "Launching your meeting in {{app}}…",
@@ -311,7 +311,7 @@
         "demoteParticipantDialog": "Are you sure you want to move this participant to viewer?",
         "demoteParticipantTitle": "Move to viewer",
         "dismiss": "Dismiss",
-        "displayNameRequired": "Hi! What’s your name?",
+        "displayNameRequired": "Hi! What's your name?",
         "done": "Done",
         "e2eeDescription": "End-to-End Encryption is currently EXPERIMENTAL. Please keep in mind that turning on end-to-end encryption will effectively disable server-side provided services such as: phone participation. Also keep in mind that the meeting will only work for people joining from browsers with support for insertable streams.",
         "e2eeDisabledDueToMaxModeDescription": "Cannot enable End-to-End Encryption due to large number of participants in the conference.",
@@ -414,7 +414,7 @@
         "reservationErrorMsg": "Error code: {{code}}, message: {{msg}}",
         "retry": "Retry",
         "screenSharingAudio": "Share audio",
-        "screenSharingFailed": "Oops! Something went wrong, we weren’t able to start screen sharing!",
+        "screenSharingFailed": "Oops! Something went wrong, we weren't able to start screen sharing!",
         "screenSharingFailedTitle": "Screen sharing failed!",
         "screenSharingPermissionDeniedError": "Oops! Something went wrong with your screen sharing permissions. Please reload and try again.",
         "searchInSalesforce": "Search in Salesforce",
@@ -443,7 +443,7 @@
         "shareScreenWarningD2": "you need to stop audio sharing, start screen sharing and check the \"share audio\" option.",
         "shareScreenWarningH1": "If you want to share just your screen:",
         "shareScreenWarningTitle": "You need to stop audio sharing before sharing your screen",
-        "shareVideoConfirmPlay": "You’re about to open an external website. Do you want to continue?",
+        "shareVideoConfirmPlay": "You're about to open an external website. Do you want to continue?",
         "shareVideoConfirmPlayTitle": "{{name}} has shared a video with you.",
         "shareVideoLinkError": "Oops, this video cannot be played.",
         "shareVideoLinkStopped": "The video from {{name}} was stopped.",
@@ -634,7 +634,7 @@
         "expandedOn": "The meeting is currently being live streamed",
         "expandedPending": "The live streaming is being started…",
         "failedToStart": "Live Streaming failed to start",
-        "getStreamKeyManually": "We weren’t able to fetch any live streams. Try getting your live stream key from YouTube.",
+        "getStreamKeyManually": "We weren't able to fetch any live streams. Try getting your live stream key from YouTube.",
         "googlePrivacyPolicy": "Google Privacy Policy",
         "inProgress": "Recording or live streaming in progress",
         "invalidStreamKey": "Live stream key may be incorrect.",
@@ -757,7 +757,7 @@
         "displayNotifications": "Display notifications for",
         "dontRemindMe": "Do not remind me",
         "focus": "Conference focus",
-        "focusFail": "{{component}} not available - retry in {{ms}} sec",
+        "focusFail": "{{component}} not available - retrying in {{ms}} sec",
         "gifsMenu": "GIPHY",
         "groupTitle": "Notifications",
         "hostAskedUnmute": "The moderator would like you to participate.",
@@ -768,7 +768,7 @@
         "invitedThreePlusMembers": "{{name}} and {{count}} others have been invited",
         "invitedTwoMembers": "{{first}} and {{second}} have been invited",
         "joinMeeting": "Join",
-        "kickParticipant": "{{kicked}} was kicked by {{kicker}}",
+        "kickParticipant": "{{kicked}} has been kicked by {{kicker}}",
         "leftOneMember": "{{name}} left the meeting",
         "leftThreePlusMembers": "{{name}} and many others left the meeting",
         "leftTwoMembers": "{{first}} and {{second}} left the meeting",
@@ -932,7 +932,7 @@
         "callMeAtNumber": "Call me at this number:",
         "calling": "Calling",
         "configuringDevices": "Configuring devices…",
-        "connectedWithAudioQ": "You’re connected with audio?",
+        "connectedWithAudioQ": "You're connected with audio?",
         "connection": {
             "failed": "Connection test failed!",
             "good": "Your internet connection looks good!",
@@ -1522,7 +1522,7 @@
         "notification": {
             "demoteDescription": "Sent here by {{actor}}, raise your hand to participate",
             "noMainParticipantsDescription": "A participant needs to start the meeting. Please try again in a bit.",
-            "noMainParticipantsTitle": "This meeting hasn’t started yet.",
+            "noMainParticipantsTitle": "This meeting hasn't started yet.",
             "noVisitorLobby": "You cannot join while there is a lobby enabled for the meeting.",
             "notAllowedPromotion": "A participant needs to allow your request first.",
             "title": "You are a viewer in the meeting"
@@ -1587,5 +1587,31 @@
             "heading": "Whiteboard"
         },
         "screenTitle": "Whiteboard"
-    }
+    },
+    "stickers": {
+        "panelTitle": "Stickers",
+        "tabs": {
+            "emoji": "Emoji",
+            "stickers": "Stickers",
+            "giphy": "GIPHY"
+        },
+        "categories": {
+            "emoji": "Emoji",
+            "animals": "Animals",
+            "food": "Food",
+            "activities": "Activities",
+            "objects": "Objects",
+            "symbols": "Symbols"
+        },
+        "packs": {
+            "cute": "Cute",
+            "meme": "Meme",
+            "animated": "Animated"
+        },
+        "search": "Search",
+        "searchGiphy": "Search for GIFs",
+        "searchForGifs": "Search for GIFs above",
+        "loading": "Loading..."
+    },
+    "subject": "SUBJECT"
 }

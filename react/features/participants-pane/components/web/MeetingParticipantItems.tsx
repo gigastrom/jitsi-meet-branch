@@ -1,6 +1,26 @@
 import React from 'react';
+import { makeStyles } from 'tss-react/mui';
 
 import MeetingParticipantItem from './MeetingParticipantItem';
+
+const useStyles = makeStyles()((theme: any) => {
+    return {
+        participantsList: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            padding: '8px 0',
+            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.95))',
+            borderRadius: '12px',
+            margin: '8px 0',
+            transition: 'all 0.3s ease',
+
+            '&:hover': {
+                backgroundColor: 'var(--background-hover, rgba(28, 32, 37, 0.98))'
+            }
+        }
+    };
+});
 
 interface IProps {
 
@@ -94,6 +114,8 @@ function MeetingParticipantItems({
     stopVideo,
     youText
 }: IProps) {
+    const { classes } = useStyles();
+
     const renderParticipant = (id: string) => (
         <MeetingParticipantItem
             isHighlighted = { raiseContextId === id }
@@ -111,9 +133,11 @@ function MeetingParticipantItems({
             youText = { youText } />
     );
 
-    return (<>
-        {participantIds.map(renderParticipant)}
-    </>);
+    return (
+        <div className={classes.participantsList}>
+            {participantIds.map(renderParticipant)}
+        </div>
+    );
 }
 
 // Memoize the component in order to avoid rerender on drawer open/close.
