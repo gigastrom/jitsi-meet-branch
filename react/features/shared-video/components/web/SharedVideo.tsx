@@ -148,7 +148,7 @@ class SharedVideo extends Component<IProps, IState> {
     /**
      * Initial component state.
      */
-    state = {
+    override state = {
         isDragging: false,
         position: { x: 0, y: 0 },
         size: { width: 0, height: 0 },
@@ -164,7 +164,7 @@ class SharedVideo extends Component<IProps, IState> {
      * 
      * @returns {void}
      */
-    componentDidMount() {
+    override componentDidMount() {
         // Add event listeners for dragging
         document.addEventListener('mousemove', this.handleMouseMove);
         document.addEventListener('mouseup', this.handleMouseUp);
@@ -202,7 +202,7 @@ class SharedVideo extends Component<IProps, IState> {
      * 
      * @returns {void}
      */
-    componentWillUnmount() {
+    override componentWillUnmount() {
         document.removeEventListener('mousemove', this.handleMouseMove);
         document.removeEventListener('mouseup', this.handleMouseUp);
     }

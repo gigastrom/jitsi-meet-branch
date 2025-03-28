@@ -66,6 +66,7 @@ declare global {
             conference: {
                 toggleVideoMuted: (showUI?: boolean) => void;
                 toggleAudioMuted: (showUI?: boolean) => void;
+                hangup?: (shouldExit: boolean) => void; // Fix parameter type
             };
         };
         backgroundSync?: {
@@ -1326,7 +1327,7 @@ const useStyles = makeStyles()(() => {
             
             '& span': {
                 fontSize: '14px',
-                fontWeight: '500',
+                fontWeight: 500, // Change from string '500' to number 500
             }
         },
         templateActions: {
@@ -1501,10 +1502,19 @@ const BackgroundSelector = () => {
     const dispatch = useDispatch();
     const [selectedBackground, setSelectedBackground] = useState('default');
     const [showOptions, setShowOptions] = useState(false);
-    const [customBackgrounds, setCustomBackgrounds] = useState<Array<{id: string, value: string, type: string, name: string}>>([]);
+    const [customBackgrounds, setCustomBackgrounds] = useState<Array<{id: string, value: string, type: string, name: string, thumbnail?: string}>>([]);
     const [showThemeSelector, setShowThemeSelector] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState('default');
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+    
+    // Add stickers state
+    const [stickers, setStickers] = useState<Array<{
+        type: 'emoji' | 'image';
+        content: string;
+        position: { x: number; y: number };
+        size: number;
+        rotation: number;
+    }>>([]);
     
     // Add chat visibility state
     // Replace the showChat state with isChatCollapsed
@@ -1612,16 +1622,40 @@ const BackgroundSelector = () => {
         );
         
         // Function to find background data by ID
-        const findBackgroundById = (backgroundId: string) => {
-            // First check predefined backgrounds
-            let background = BACKGROUNDS.find(bg => bg.id === backgroundId);
-            
-            // If not found in predefined list, check custom backgrounds
-            if (!background && backgroundId.startsWith('custom-')) {
-                background = customBackgrounds.find(bg => bg.id === backgroundId);
+        const findBackgroundById = (backgroundId: string): {
+            id: string;
+            value: string;
+            type: string;
+            name: string;
+            thumbnail?: string;
+        } => {
+            // First check in built-in backgrounds
+            const builtInBg = BACKGROUNDS.find(bg => bg.id === backgroundId);
+            if (builtInBg) {
+                return {
+                    ...builtInBg,
+                    thumbnail: builtInBg.type === 'image' 
+                        ? builtInBg.value.replace('url(', '').replace(')', '') 
+                        : undefined
+                };
             }
             
-            return background;
+            // Then check in custom backgrounds
+            const customBg = customBackgrounds.find(bg => bg.id === backgroundId);
+            if (customBg) {
+                return {
+                    ...customBg,
+                    thumbnail: customBg.type === 'image' 
+                        ? customBg.value.replace('url(', '').replace(')', '') 
+                        : undefined
+                };
+            }
+            
+            // Default fallback
+            return {
+                ...BACKGROUNDS[0],
+                thumbnail: undefined
+            };
         };
         
         // Function to forcefully apply a background to everyone
@@ -2061,16 +2095,40 @@ const BackgroundSelector = () => {
     }, [localParticipant, isAdmin]);
 
     // Function to find background data by ID
-    const findBackgroundById = (backgroundId: string) => {
-        // First check predefined backgrounds
-        let background = BACKGROUNDS.find(bg => bg.id === backgroundId);
-        
-        // If not found in predefined list, check custom backgrounds
-        if (!background && backgroundId.startsWith('custom-')) {
-            background = customBackgrounds.find(bg => bg.id === backgroundId);
+    const findBackgroundById = (backgroundId: string): {
+        id: string;
+        value: string;
+        type: string;
+        name: string;
+        thumbnail?: string;
+    } => {
+        // First check in built-in backgrounds
+        const builtInBg = BACKGROUNDS.find(bg => bg.id === backgroundId);
+        if (builtInBg) {
+            return {
+                ...builtInBg,
+                thumbnail: builtInBg.type === 'image' 
+                    ? builtInBg.value.replace('url(', '').replace(')', '') 
+                    : undefined
+            };
         }
         
-        return background;
+        // Then check in custom backgrounds
+        const customBg = customBackgrounds.find(bg => bg.id === backgroundId);
+        if (customBg) {
+            return {
+                ...customBg,
+                thumbnail: customBg.type === 'image' 
+                    ? customBg.value.replace('url(', '').replace(')', '') 
+                    : undefined
+            };
+        }
+        
+        // Default fallback
+        return {
+            ...BACKGROUNDS[0],
+            thumbnail: undefined
+        };
     };
 
     // Apply background to video container
@@ -2809,7 +2867,9 @@ const BackgroundSelector = () => {
         
         // Try to find by data attributes
         const allElements = document.querySelectorAll('[data-testid], [data-role], [data-action]');
-        for (const element of allElements) {
+        // Convert NodeList to Array for iteration
+        const elementsArray = Array.from(allElements);
+        for (const element of elementsArray) {
             const testId = element.getAttribute('data-testid') || '';
             const role = element.getAttribute('data-role') || '';
             const action = element.getAttribute('data-action') || '';
@@ -2823,7 +2883,9 @@ const BackgroundSelector = () => {
         
         // Try to find by class name
         const allButtons = document.querySelectorAll('button, .button, [role="button"]');
-        for (const button of allButtons) {
+        // Convert NodeList to Array for iteration
+        const buttonsArray = Array.from(allButtons);
+        for (const button of buttonsArray) {
             const className = button.className || '';
             const text = button.textContent?.toLowerCase() || '';
             
@@ -3961,8 +4023,9 @@ const BackgroundSelector = () => {
         // Use APP.conference directly to leave the meeting
         sendAnalytics(createToolbarEvent('hangup'));
         
-        if (typeof APP !== 'undefined' && APP.conference) {
-            APP.conference.hangup(false);
+        if (typeof APP !== 'undefined' && APP.conference && typeof APP.conference.hangup === 'function') {
+            // Use optional chaining and type checking for safety
+            APP.conference.hangup?.(false);
         } else {
             // Fallback if APP is not available
             window.history.back();
@@ -3993,17 +4056,19 @@ const BackgroundSelector = () => {
     const saveAsTemplate = () => {
         if (!templateName.trim()) return;
         
+        // Use selectedBackground instead of currentBackground
+        // and check if stickers is defined before using it
         const newTemplate: Template = {
             id: Date.now().toString(),
             name: templateName.trim(),
-            backgroundId: currentBackground,
-            stickers: stickers.map(sticker => ({
+            backgroundId: selectedBackground || 'default', // Use selectedBackground state variable
+            stickers: Array.isArray(stickers) ? stickers.map(sticker => ({
                 type: sticker.type,
                 content: sticker.content,
                 position: sticker.position,
                 size: sticker.size,
                 rotation: sticker.rotation
-            })),
+            })) : [], // Add a check if stickers exists
             createdAt: Date.now()
         };
 
@@ -4023,10 +4088,18 @@ const BackgroundSelector = () => {
         // Clear existing stickers
         setStickers([]);
         
-        // Add template stickers
-        template.stickers.forEach(sticker => {
-            addSticker(sticker.type, sticker.content, sticker.position, sticker.size, sticker.rotation);
-        });
+        // Add template stickers safely
+        if (Array.isArray(template.stickers)) {
+            template.stickers.forEach(sticker => {
+                addSticker(
+                    sticker.type, 
+                    sticker.content, 
+                    sticker.position, 
+                    sticker.size, 
+                    sticker.rotation
+                );
+            });
+        }
         
         setShowTemplates(false);
     };
@@ -4078,7 +4151,7 @@ const BackgroundSelector = () => {
                     <div key={template.id} className={classes.templateItem}>
                         <div className={classes.templatePreview}>
                             <img 
-                                src={findBackgroundById(template.backgroundId)?.thumbnail} 
+                                src={findBackgroundById(template.backgroundId)?.thumbnail ?? ''}
                                 alt={template.name}
                             />
                         </div>
@@ -4113,6 +4186,23 @@ const BackgroundSelector = () => {
     const handleTitleUpdate = () => {
         setIsEditingTitle(false);
         // Here you can add logic to update the room name in your backend if needed
+    };
+
+    // Add sticker helper function
+    const addSticker = (
+        type: 'emoji' | 'image',
+        content: string,
+        position: { x: number; y: number },
+        size: number,
+        rotation: number
+    ) => {
+        setStickers(prev => [...prev, {
+            type,
+            content,
+            position,
+            size,
+            rotation
+        }]);
     };
 
     return (

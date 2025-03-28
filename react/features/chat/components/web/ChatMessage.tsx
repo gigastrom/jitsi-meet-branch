@@ -22,7 +22,6 @@ interface IProps extends IChatMessageProps {
     showDisplayName: boolean;
     showTimestamp: boolean;
     knocking: boolean;
-    t: Function;
 }
 
 const useStyles = makeStyles()((theme: Theme) => {
@@ -359,8 +358,8 @@ const ChatMessage = ({
                     <div className={classes.userMessage}>
                         <Message
                             screenReaderHelpText={message.displayName === message.recipient
-                                ? t<string>('chat.messageAccessibleTitleMe')
-                                : t<string>('chat.messageAccessibleTitle', {
+                                ? t('chat.messageAccessibleTitleMe')
+                                : t('chat.messageAccessibleTitle', {
                                     user: message.displayName
                                 })}
                             text={getMessageText(message)} />
@@ -428,4 +427,4 @@ function _mapStateToProps(state: IReduxState, { message }: IProps) {
     };
 }
 
-export default translate(connect(_mapStateToProps)(ChatMessage));
+export default translate<IProps>(connect(_mapStateToProps)(ChatMessage));

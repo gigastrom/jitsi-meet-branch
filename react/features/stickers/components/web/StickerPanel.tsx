@@ -869,7 +869,7 @@ function StickerPanel({ t, dispatch }: IProps) {
                     countryCode: 'US',
                     apikey: '3f44775f69675def8957970deff659e5'
                 }}
-                stickerClick={(sticker) => {
+                stickerClick={(sticker: { url: string }) => {
                     console.log('Stipop sticker clicked:', sticker);
                     addSticker(sticker.url, 'sticker');
                 }}

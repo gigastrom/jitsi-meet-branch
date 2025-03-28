@@ -1,11 +1,43 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { makeStyles } from '@material-ui/core/styles';
-import { Tabs } from '@material-ui/core';
-import { Icon } from '@jitsi/react-sdk';
-import { IconClose } from '@jitsi/react-sdk';
+import { makeStyles } from 'tss-react/mui';
+import { Tabs, Tab } from '@mui/material';
+import Icon from '../../../base/icons/components/Icon';
+import { IconCloseLarge } from '../../../base/icons/svg';
 
-const useStyles = makeStyles()(theme => {
+enum InviteTab {
+    EMAIL = 'email',
+    PHONE = 'phone'
+}
+
+interface IProps {
+    /**
+     * Callback to close the dialog
+     */
+    onClose: () => void;
+    
+    /**
+     * ID of the conference
+     */
+    conferenceID: string;
+    
+    /**
+     * URL of the conference
+     */
+    conferenceURL: string;
+    
+    /**
+     * Callback to copy the conference URL to clipboard
+     */
+    copyToClipboard: () => void;
+    
+    /**
+     * Callback to handle sending invites
+     */
+    handleSendInvites: () => void;
+}
+
+const useStyles = makeStyles()((theme: any) => {
     return {
         container: {
             backgroundColor: theme.palette.ui01,
@@ -139,9 +171,9 @@ const useStyles = makeStyles()(theme => {
     };
 });
 
-const InviteDialog = ({ onClose, conferenceID, conferenceURL, copyToClipboard, handleSendInvites }) => {
+const InviteDialog = ({ onClose, conferenceID, conferenceURL, copyToClipboard, handleSendInvites }: IProps) => {
     const { t } = useTranslation();
-    const classes = useStyles();
+    const { classes } = useStyles();
     const [activeTab, setActiveTab] = useState(InviteTab.EMAIL);
 
     const renderTabContent = () => {
@@ -156,7 +188,7 @@ const InviteDialog = ({ onClose, conferenceID, conferenceURL, copyToClipboard, h
                     className={classes.closeButton}
                     onClick={onClose}
                     aria-label={t('dialog.close')}>
-                    <Icon src={IconClose} size={24} />
+                    <Icon src={IconCloseLarge} size={24} />
                 </button>
             </div>
             <div className={classes.content}>
@@ -181,24 +213,20 @@ const InviteDialog = ({ onClose, conferenceID, conferenceURL, copyToClipboard, h
                     </div>
                     <div className={classes.tabsContainer}>
                         <Tabs
-                            accessibilityLabel={t('invite.tabs.accessibility')}
-                            onChange={tab => setActiveTab(tab as InviteTab)}
-                            selected={activeTab}
-                            tabs={[
-                                {
-                                    id: InviteTab.EMAIL,
-                                    label: t('invite.tabs.email'),
-                                    accessibilityLabel: t('invite.tabs.email'),
-                                    controlsId: 'invite-email-tab'
-                                },
-                                {
-                                    id: InviteTab.PHONE,
-                                    label: t('invite.tabs.phone'),
-                                    accessibilityLabel: t('invite.tabs.phone'),
-                                    controlsId: 'invite-phone-tab'
-                                }
-                            ]}
-                        />
+                            value={activeTab}
+                            onChange={(_, tab) => setActiveTab(tab as InviteTab)}
+                            aria-label={t('invite.tabs.accessibility')}>
+                            <Tab 
+                                value={InviteTab.EMAIL}
+                                label={t('invite.tabs.email')}
+                                aria-label={t('invite.tabs.email')}
+                                id="invite-email-tab" />
+                            <Tab
+                                value={InviteTab.PHONE}
+                                label={t('invite.tabs.phone')}
+                                aria-label={t('invite.tabs.phone')}
+                                id="invite-phone-tab" />
+                        </Tabs>
                     </div>
                     <div className={classes.tabContent}>
                         {renderTabContent()}

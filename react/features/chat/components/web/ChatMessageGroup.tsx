@@ -71,6 +71,8 @@ export default function ChatMessageGroup(props: IProps) {
                             message={message}
                             showDisplayName={showDisplayName}
                             showTimestamp={showTimestamp}
+                            knocking={false}
+                            shouldDisplayChatMessageMenu={true}
                             type={className} />
                     );
                 })}

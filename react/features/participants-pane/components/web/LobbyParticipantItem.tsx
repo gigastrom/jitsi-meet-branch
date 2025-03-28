@@ -116,7 +116,9 @@ export const LobbyParticipantItem = ({
                             testId: `lobby-chat-${id}`,
                             icon: IconMessage,
                             text: t('lobby.chat')
-                        } ] } />
+                        } ] } >
+                        <></>
+                    </ContextMenuItemGroup>
                     <ContextMenuItemGroup
                         actions = { [ {
                             accessibilityLabel: `${t('participantsPane.actions.reject')} ${p.name}`,
@@ -124,7 +126,9 @@ export const LobbyParticipantItem = ({
                             testId: `reject-${id}`,
                             icon: IconUserDeleted,
                             text: t('participantsPane.actions.reject')
-                        } ] } />
+                        } ] } >
+                        <></>
+                    </ContextMenuItemGroup>
                 </ContextMenu>
             </> : <>
                 <Button

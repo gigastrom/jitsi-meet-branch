@@ -74,6 +74,10 @@ import VideoSettingsButton from './components/web/VideoSettingsButton';
 import { isButtonEnabled, isDesktopShareButtonDisabled } from './functions.web';
 import { ICustomToolbarButton, IToolboxButton, ToolbarButton } from './types';
 import { isToolboxVisible } from './functions.web';
+import {
+    setShiftUp,
+    setToolboxVisible
+} from './actions.any';
 
 
 const microphone = {

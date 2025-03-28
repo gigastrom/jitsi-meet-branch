@@ -113,7 +113,15 @@ export default class MessageContainer extends AbstractMessageContainer<IProps, I
         return (
             <div id="chat-conversation-container">
                 <div
-                    style={styles.messagesContainer}
+                    style={{
+                        backgroundColor: styles.messagesContainer.backgroundColor,
+                        color: styles.messagesContainer.color,
+                        display: styles.messagesContainer.display,
+                        flexDirection: styles.messagesContainer.flexDirection as 'column',
+                        height: styles.messagesContainer.height,
+                        overflowY: styles.messagesContainer.overflowY as 'auto' | 'scroll' | 'hidden' | 'visible',
+                        padding: styles.messagesContainer.padding
+                    }}
                     aria-labelledby="chat-header"
                     id="chatconversation"
                     onScroll={this._onChatScroll}
@@ -288,13 +296,13 @@ export default class MessageContainer extends AbstractMessageContainer<IProps, I
     * MessageIsAfterLastSeenMessage filter elements which are not visible but are before the last read message.
     *
     * @private
-    * @returns {Element}
+    * @returns {Element | undefined}
     */
     _findFirstUnreadMessage() {
         const messagesNodeList = document.querySelectorAll('.chatmessage-wrapper');
 
-        // @ts-ignore
-        const messagesToArray = [ ...messagesNodeList ];
+        // Convert NodeList to Array with proper typing
+        const messagesToArray = Array.from(messagesNodeList);
 
         const previousIndex = messagesToArray.findIndex((message: Element) =>
             message.id === this.state.lastReadMessageId);
@@ -306,6 +314,8 @@ export default class MessageContainer extends AbstractMessageContainer<IProps, I
                 }
             }
         }
+
+        return undefined;
     }
 
     /**

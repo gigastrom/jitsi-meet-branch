@@ -101,7 +101,7 @@ const ParticipantsPaneButton = ({
                 [classes.active]: _isOpen
             })}>
             <div
-                accessibilityLabel={getAccessibilityLabel()}
+                aria-label={getAccessibilityLabel()}
                 onClick={handleClick}
                 role="button"
                 tabIndex={0}>

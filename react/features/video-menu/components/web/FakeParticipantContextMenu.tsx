@@ -157,7 +157,9 @@ const FakeParticipantContextMenu = ({
                         participantId = { drawerParticipant.participantID }
                         size = { 20 } />,
                     text: drawerParticipant.displayName
-                } ] } />}
+                } ] } >
+                    <></>
+                </ContextMenuItemGroup>}
 
             <ContextMenuItemGroup
                 actions = { _getActions() }>

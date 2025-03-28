@@ -220,7 +220,9 @@ export const FooterContextMenu = ({ isOpen, onDrawerClose, onMouseLeave }: IProp
                     icon: IconVideoOff,
                     onClick: muteAllVideo,
                     text: t('participantsPane.actions.stopEveryonesVideo')
-                }]} />
+                }]}>
+                <></>
+            </ContextMenuItemGroup>
             {raisedHandsQueue.length !== 0 && (
                 <>
                     <div className={classes.separator} />
@@ -232,7 +234,9 @@ export const FooterContextMenu = ({ isOpen, onDrawerClose, onMouseLeave }: IProp
                     <div className={classes.text}>
                         <span>{t('participantsPane.actions.allow')}</span>
                     </div>
-                    <ContextMenuItemGroup actions={actions} />
+                    <ContextMenuItemGroup actions={actions}>
+                        <></>
+                    </ContextMenuItemGroup>
                 </div>
             )}
             {isModeratorSettingsTabEnabled && (
@@ -246,7 +250,9 @@ export const FooterContextMenu = ({ isOpen, onDrawerClose, onMouseLeave }: IProp
                             icon: IconDotsHorizontal,
                             onClick: openModeratorSettings,
                             text: t('participantsPane.actions.moreModerationControls')
-                        }]} />
+                        }]}>
+                        <></>
+                    </ContextMenuItemGroup>
                 </>
             )}
         </ContextMenu>

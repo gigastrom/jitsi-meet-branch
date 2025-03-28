@@ -342,7 +342,9 @@ const ParticipantContextMenu = ({
                         participantId = { drawerParticipant.participantID }
                         size = { 20 } />,
                     text: drawerParticipant.displayName
-                } ] } />}
+                } ] } >
+                    <></>
+                </ContextMenuItemGroup>}
             {buttons.length > 0 && (
                 <ContextMenuItemGroup>
                     {buttons}

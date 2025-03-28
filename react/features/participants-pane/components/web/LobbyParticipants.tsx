@@ -164,7 +164,8 @@ const LobbyParticipants = () => {
             ) : (
                 <div className = { styles.participantsContainer }>
                     <LobbyParticipantItems 
-                        lobbyParticipants = { participants }
+                        participants = { participants }
+                        overflowDrawer = { false }
                         openDrawerForParticipant = { () => {} } />
                 </div>
             )}

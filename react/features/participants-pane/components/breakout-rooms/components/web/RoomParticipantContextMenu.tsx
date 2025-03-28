@@ -122,7 +122,9 @@ export const RoomParticipantContextMenu = ({
                         displayName = { entity?.participantName }
                         size = { AVATAR_SIZE } />,
                     text: entity?.participantName
-                } ] } />}
+                } ] } >
+                    <></>
+                </ContextMenuItemGroup>}
 
             <ContextMenuItemGroup>
                 <div className = { styles.text }>

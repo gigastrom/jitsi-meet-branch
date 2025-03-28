@@ -14,10 +14,10 @@ import { StickerPanel } from './';
  * Component that renders a toolbar button for stickers.
  */
 class StickerButton extends AbstractButton<AbstractButtonProps> {
-    accessibilityLabel = 'toolbar.accessibilityLabel.stickers';
-    icon = IconFaceSmile;
-    label = 'toolbar.stickers';
-    tooltip = 'toolbar.stickers';
+    override accessibilityLabel = 'toolbar.accessibilityLabel.stickers';
+    override icon = IconFaceSmile;
+    override label = 'toolbar.stickers';
+    override tooltip = 'toolbar.stickers';
 
     /**
      * Handles clicking / pressing the button.
@@ -25,7 +25,7 @@ class StickerButton extends AbstractButton<AbstractButtonProps> {
      * @private
      * @returns {void}
      */
-    _handleClick() {
+    override _handleClick() {
         const { dispatch } = this.props;
 
         // Close overflow menu if open
