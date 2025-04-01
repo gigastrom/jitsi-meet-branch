@@ -3,31 +3,22 @@
 
 /* Hide the large video display */
 
-#largeVideoContainer {
-    display: none !important;
-}
 
 
 /* Style for the filmstrip */
+
 
 .filmstrip {
     position: relative !important;
     background: transparent !important;
     z-index: 5 !important;
     pointer-events: none !important;
+
     /* Allow clicking through the filmstrip container */
 }
 
 
 /* Remove any background from the filmstrip */
-
-.filmstrip,
-.vertical-filmstrip,
-#filmstripContainer {
-    background: transparent !important;
-    pointer-events: none !important;
-    /* Make sure we can click through it */
-}
 
 
 /* Style for the video container */
@@ -65,10 +56,11 @@
 
 /* Fix pointer events on key elements */
 
+
 #largeVideoWrapper,
 #videospace,
 #largeVideoContainer {
-    pointer-events: none !important;
+//    pointer-events: none !important;
 }
 
 

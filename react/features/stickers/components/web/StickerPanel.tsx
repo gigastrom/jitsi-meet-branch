@@ -13,12 +13,43 @@ import Tabs from '../../../base/ui/components/web/Tabs';
 import Input from '../../../base/ui/components/web/Input';
 import Button from '../../../base/ui/components/web/Button';
 import { BUTTON_TYPES } from '../../../base/ui/constants.any';
+import { getCurrentConference } from '../../../base/conference/functions';
+import { getLocalParticipant } from '../../../base/participants/functions';
+import { 
+    initBackgroundSync,
+    isParticipantAdmin,
+    hasBackgroundPermission,
+    broadcastStickerAdd,
+    broadcastStickerMove,
+    broadcastStickerResize,
+    broadcastStickerDelete
+} from '../../../virtual-background/components/web/BackgroundPermissions';
 
 interface IProps extends WithTranslation {
     /**
      * The redux dispatch function.
      */
     dispatch: Function;
+
+    /**
+     * The current conference object.
+     */
+    conference: any;
+
+    /**
+     * The local participant.
+     */
+    localParticipant: any;
+
+    /**
+     * Whether the user is an admin.
+     */
+    isAdmin: boolean;
+
+    /**
+     * Whether the user has permission to add stickers.
+     */
+    hasPermission: boolean;
 }
 
 // Sticker categories and their stickers
@@ -127,108 +158,87 @@ const useStyles = makeStyles()(theme => {
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
         },
         contentContainer: {
-            display: 'flex',
-            flexDirection: 'column',
-            height: '300px',
-            overflow: 'hidden'
+            maxHeight: '400px',
+            overflowY: 'auto',
+            padding: '16px',
+            // Custom scrollbar styling
+            '&::-webkit-scrollbar': {
+                width: '6px'
+            },
+            '&::-webkit-scrollbar-track': {
+                background: 'transparent'
+            },
+            '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(255, 255, 255, 0.3)',
+                borderRadius: '3px'
+            }
         },
         searchContainer: {
-            padding: '8px 12px',
-            backgroundColor: 'rgba(30, 43, 58, 0.5)',
             display: 'flex',
-            alignItems: 'center',
+            marginBottom: '12px',
             gap: '8px'
         },
         searchInput: {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            flex: 1,
+            background: 'rgba(255, 255, 255, 0.1)',
             color: 'white',
-            fontSize: '14px',
-            padding: '8px 12px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '4px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            width: '100%',
+            padding: '8px 12px',
+            fontSize: '14px',
+            outline: 'none',
             '&:focus': {
-                outline: 'none',
-                borderColor: theme.palette.primary.main
+                borderColor: 'rgba(255, 255, 255, 0.4)'
             }
         },
         categoriesRow: {
             display: 'flex',
-            overflowX: 'auto',
-            padding: '8px 16px',
+            flexWrap: 'wrap',
             gap: '8px',
-            backgroundColor: 'rgba(30, 43, 58, 0.3)',
-            '&::-webkit-scrollbar': {
-                height: '6px'
-            },
-            '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                borderRadius: '3px'
-            }
+            marginBottom: '12px'
         },
         categoryButton: {
-            padding: '6px 12px',
-            borderRadius: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            background: 'rgba(255, 255, 255, 0.1)',
             color: 'white',
-            fontSize: '12px',
             border: 'none',
+            borderRadius: '4px',
+            padding: '6px 10px',
+            fontSize: '12px',
             cursor: 'pointer',
-            whiteSpace: 'nowrap',
+            transition: 'all 0.2s',
             '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                background: 'rgba(255, 255, 255, 0.2)'
             },
             '&.active': {
-                backgroundColor: theme.palette.primary.main
+                background: 'rgba(73, 143, 225, 0.6)',
+                fontWeight: 'bold'
             }
         },
         stickersContainer: {
             display: 'grid',
             gridTemplateColumns: 'repeat(5, 1fr)',
-            gap: '12px',
-            padding: '16px',
-            overflowY: 'auto',
-            height: '100%',
-            '&::-webkit-scrollbar': {
-                width: '6px'
-            },
-            '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                borderRadius: '3px'
-            }
+            gap: '8px'
         },
         stickerItem: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(61, 76, 92, 0.5)',
-            borderRadius: '8px',
-            cursor: 'pointer',
             fontSize: '24px',
-            height: '50px',
-            width: '50px',
-            transition: 'transform 0.2s, background-color 0.2s',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            width: '100%',
+            aspectRatio: '1/1',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
             '&:hover': {
                 transform: 'scale(1.1)',
-                backgroundColor: 'rgba(74, 90, 107, 0.7)',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+                background: 'rgba(255, 255, 255, 0.15)'
             }
         },
         giphyContainer: {
-            padding: '16px',
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '12px',
-            overflowY: 'auto',
-            height: '100%',
-            '&::-webkit-scrollbar': {
-                width: '6px'
-            },
-            '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                borderRadius: '3px'
-            }
+            gap: '8px'
         },
         giphyItem: {
             display: 'flex',
@@ -252,76 +262,54 @@ const useStyles = makeStyles()(theme => {
                 objectFit: 'cover'
             }
         },
-        stickerPackContainer: {
-            padding: '16px',
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            overflowY: 'auto',
-            height: '100%',
-            '&::-webkit-scrollbar': {
-                width: '6px'
-            },
-            '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                borderRadius: '3px'
-            }
-        },
-        stickerPackItem: {
-            width: '100%',
-            height: '100%',
-            aspectRatio: '1/1',
-            objectFit: 'contain',
-            cursor: 'pointer',
-            borderRadius: '8px',
-            transition: 'transform 0.2s',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            padding: '5px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            '&:hover': {
-                transform: 'scale(1.05)',
-                backgroundColor: 'rgba(255, 255, 255, 0.2)'
-            }
-        },
         loadingContainer: {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             height: '100%',
-            color: 'white'
-        },
-        searchButtonsContainer: {
-            display: 'flex',
-            gap: '8px'
+            color: 'white',
+            padding: '20px'
         },
         stipopContainer: {
-            height: '100%',
-            overflow: 'hidden',
-            '& .stipop-search-container': {
-                height: '100%',
-                backgroundColor: 'transparent',
-                border: 'none',
-                '& .stipop-search-input': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    '&:focus': {
-                        outline: 'none',
-                        borderColor: theme.palette.primary.main
-                    }
-                },
-                '& .stipop-sticker-grid': {
-                    backgroundColor: 'transparent',
-                    '& .stipop-sticker-item': {
-                        backgroundColor: 'rgba(61, 76, 92, 0.5)',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        '&:hover': {
-                            backgroundColor: 'rgba(74, 90, 107, 0.7)',
-                            transform: 'scale(1.05)'
-                        }
-                    }
-                }
+            height: '400px',
+            overflow: 'hidden'
+        },
+        // New classes for the updated emoji tab layout
+        emojiContainer: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            overflowY: 'auto',
+            maxHeight: '400px'
+        },
+        emojiCategory: {
+            marginBottom: '12px'
+        },
+        categoryTitle: {
+            fontSize: '14px',
+            fontWeight: 'bold',
+            marginBottom: '8px',
+            color: 'rgba(255, 255, 255, 0.8)'
+        },
+        emojiGrid: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: '8px'
+        },
+        emojiItem: {
+            fontSize: '24px',
+            width: '100%',
+            aspectRatio: '1/1',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
+            '&:hover': {
+                transform: 'scale(1.1)',
+                background: 'rgba(255, 255, 255, 0.15)'
             }
         }
     };
@@ -332,7 +320,8 @@ const useStyles = makeStyles()(theme => {
  *
  * @returns {React$Element<any>}
  */
-function StickerPanel({ t, dispatch }: IProps) {
+function StickerPanel(props: IProps) {
+    const { t, dispatch, conference, localParticipant, isAdmin, hasPermission } = props;
     const { classes, cx } = useStyles();
     const panelRef = useRef<HTMLDivElement>(null);
     const [activeTab, setActiveTab] = useState<StickersTab>(StickersTab.EMOJI);
@@ -418,30 +407,28 @@ function StickerPanel({ t, dispatch }: IProps) {
                 (backgroundContainer as HTMLElement).style.position = 'relative';
             }
             
+            // Generate a unique sticker ID
+            const stickerId = `sticker-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            
             // Create a new sticker element
             const stickerElement = document.createElement('div');
             stickerElement.className = 'sticker-item on-screen';
+            stickerElement.id = stickerId;
             
             // Set styles directly to ensure they're applied - use absolute positioning relative to the background
             stickerElement.style.position = 'absolute';
             stickerElement.style.zIndex = '9999';
-            stickerElement.style.fontSize = '40px';
-            stickerElement.style.display = 'flex';
-            stickerElement.style.justifyContent = 'center';
-            stickerElement.style.alignItems = 'center';
+            stickerElement.style.left = '50%'; // Start in the center horizontally
+            stickerElement.style.top = '50%'; // Start in the center vertically
+            stickerElement.style.transform = 'translate(-50%, -50%)';
+            stickerElement.style.padding = '5px';
+            stickerElement.style.borderRadius = '4px';
             stickerElement.style.cursor = 'move';
-            stickerElement.style.padding = '0';
-            stickerElement.style.pointerEvents = 'auto';
+            stickerElement.style.userSelect = 'none';
             
-            // Position randomly within the background container using percentages
-            const randomXPercent = Math.floor(Math.random() * 80); // 0-80% of container width
-            const randomYPercent = Math.floor(Math.random() * 80); // 0-80% of container height
+            // Create the content element (emoji or image)
+            let contentElement: HTMLSpanElement | HTMLImageElement;
             
-            stickerElement.style.left = `${randomXPercent}%`;
-            stickerElement.style.top = `${randomYPercent}%`;
-            
-            // Add content based on type
-            let contentElement;
             if (type === 'emoji') {
                 contentElement = document.createElement('span');
                 contentElement.textContent = content;
@@ -453,16 +440,18 @@ function StickerPanel({ t, dispatch }: IProps) {
                 contentElement.style.alignItems = 'center';
                 contentElement.style.justifyContent = 'center';
             } else {
-                contentElement = document.createElement('img');
-                contentElement.src = content;
-                contentElement.alt = 'Sticker';
-                contentElement.style.width = '25%';
-                contentElement.style.maxWidth = '25vw';
-                contentElement.style.height = 'auto';
-                contentElement.style.borderRadius = '4px';
-                contentElement.style.transform = 'scale(1)';
-                contentElement.style.transformOrigin = 'center';
-                contentElement.style.transition = 'transform 0.2s, width 0.2s';
+                // Create and properly type the image element
+                const imgElement = document.createElement('img');
+                imgElement.src = content;
+                imgElement.alt = 'Sticker';
+                imgElement.style.width = '25%';
+                imgElement.style.maxWidth = '25vw';
+                imgElement.style.height = 'auto';
+                imgElement.style.borderRadius = '4px';
+                imgElement.style.transform = 'scale(1)';
+                imgElement.style.transformOrigin = 'center';
+                imgElement.style.transition = 'transform 0.2s, width 0.2s';
+                contentElement = imgElement;
             }
             stickerElement.appendChild(contentElement);
             
@@ -583,23 +572,53 @@ function StickerPanel({ t, dispatch }: IProps) {
                         const currentWidth = parseFloat(contentElement.style.width || '15');
                         contentElement.style.width = `${currentWidth * (1 - scaleStep)}%`;
                     }
+                    
+                    // Broadcast the resize if we have permission
+                    const { conference, localParticipant, isAdmin, hasPermission } = props;
+                    
+                    if (conference && localParticipant && (isAdmin || hasPermission)) {
+                        // Broadcast resize
+                        broadcastStickerResize(
+                            conference,
+                            localParticipant,
+                            {
+                                id: stickerId,
+                                scale: currentScale
+                            }
+                        );
+                    }
                 }
             });
             
             increaseSizeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (currentScale < 3) {
+                if (currentScale < 2.5) {
                     currentScale += scaleStep;
                     if (type === 'emoji') {
                         // Get the computed font size as a base
                         const computedStyle = window.getComputedStyle(contentElement);
                         const currentFontSize = parseFloat(computedStyle.fontSize);
-                        // Apply scale to font size directly
+                        // Apply scale to font size directly rather than transform
                         contentElement.style.fontSize = `${currentFontSize * (1 + scaleStep)}px`;
                     } else {
                         // For images, adjust width percentage
                         const currentWidth = parseFloat(contentElement.style.width || '15');
                         contentElement.style.width = `${currentWidth * (1 + scaleStep)}%`;
+                    }
+                    
+                    // Broadcast the resize if we have permission
+                    const { conference, localParticipant, isAdmin, hasPermission } = props;
+                    
+                    if (conference && localParticipant && (isAdmin || hasPermission)) {
+                        // Broadcast resize
+                        broadcastStickerResize(
+                            conference,
+                            localParticipant,
+                            {
+                                id: stickerId,
+                                scale: currentScale
+                            }
+                        );
                     }
                 }
             });
@@ -641,8 +660,15 @@ function StickerPanel({ t, dispatch }: IProps) {
                 controlsContainer.style.display = 'none';
             });
             
-            // Handle deletion
+            // Handle deletion with broadcasting
             deleteBtn.addEventListener('click', () => {
+                const { conference, localParticipant, isAdmin, hasPermission } = props;
+                
+                // Broadcast deletion before removing the element
+                if (conference && localParticipant && (isAdmin || hasPermission)) {
+                    broadcastStickerDelete(conference, localParticipant, stickerId);
+                }
+                
                 stickerElement.remove();
             });
             
@@ -683,13 +709,39 @@ function StickerPanel({ t, dispatch }: IProps) {
                     const maxYPercent = 95;
                     
                     // Apply the new position as percentages
-                    stickerElement.style.left = `${Math.max(0, Math.min(leftPercent, maxXPercent))}%`;
-                    stickerElement.style.top = `${Math.max(0, Math.min(topPercent, maxYPercent))}%`;
+                    const boundedLeftPercent = Math.max(0, Math.min(leftPercent, maxXPercent));
+                    const boundedTopPercent = Math.max(0, Math.min(topPercent, maxYPercent));
+                    
+                    stickerElement.style.left = `${boundedLeftPercent}%`;
+                    stickerElement.style.top = `${boundedTopPercent}%`;
+                    // Remove transform to prevent interference with positioning
+                    stickerElement.style.transform = 'none';
                 }
             };
             
             const handleMouseUp = () => {
-                isDragging = false;
+                if (isDragging) {
+                    isDragging = false;
+                    
+                    // Get the current position and broadcast it
+                    const { conference, localParticipant, isAdmin, hasPermission } = props;
+                    
+                    if (conference && localParticipant && (isAdmin || hasPermission)) {
+                        // Get the sticker position as percentages
+                        const leftPercent = parseFloat(stickerElement.style.left);
+                        const topPercent = parseFloat(stickerElement.style.top);
+                        
+                        // Broadcast the move
+                        broadcastStickerMove(
+                            conference,
+                            localParticipant,
+                            {
+                                id: stickerId,
+                                position: { x: leftPercent, y: topPercent }
+                            }
+                        );
+                    }
+                }
             };
             
             document.addEventListener('mousemove', handleMouseMove);
@@ -704,6 +756,25 @@ function StickerPanel({ t, dispatch }: IProps) {
             
             // Add to background container instead of body
             backgroundContainer.appendChild(stickerElement);
+            
+            // Broadcast the sticker addition if we have permission
+            if (conference && localParticipant && (isAdmin || hasPermission)) {
+                // Get the initial position
+                const containerRect = backgroundContainer.getBoundingClientRect();
+                
+                // Position is defaulted to center (50%, 50%)
+                broadcastStickerAdd(
+                    conference,
+                    localParticipant,
+                    {
+                        id: stickerId,
+                        type: type === 'gif' ? 'sticker' : type, // Treat GIFs as stickers for simplicity
+                        content,
+                        position: { x: 50, y: 50 }, // Start in center
+                        scale: 1
+                    }
+                );
+            }
             
             // Close the sticker panel
             closeStickerPanel();
@@ -770,6 +841,11 @@ function StickerPanel({ t, dispatch }: IProps) {
         dispatch(hideDialog());
     };
 
+    // Use the component-bound addSticker function
+    const handleAddSticker = (content: string, type: 'emoji' | 'sticker' | 'gif') => {
+        addSticker(content, type);
+    };
+
     /**
      * Renders the emoji tab content.
      * 
@@ -792,17 +868,17 @@ function StickerPanel({ t, dispatch }: IProps) {
             </div>
             <div className={classes.stickersContainer}>
                 {STICKER_CATEGORIES[currentEmojiCategory as keyof typeof STICKER_CATEGORIES].map((emoji, index) => (
-                    <div
-                        key={index}
+                            <div
+                                key={index}
                         className={classes.stickerItem}
                         onClick={() => {
                             console.log('Emoji clicked:', emoji);
                             addSticker(emoji, 'emoji');
                         }}>
-                        {emoji}
+                                {emoji}
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
         </>
     );
 
@@ -841,7 +917,7 @@ function StickerPanel({ t, dispatch }: IProps) {
                             className={classes.giphyItem}
                             onClick={() => {
                                 console.log('GIF clicked:', gif);
-                                addSticker(gif, 'gif');
+                                handleAddSticker(gif, 'gif');
                             }}>
                             <img src={gif} alt={`GIF ${index + 1}`} />
                         </div>
@@ -871,7 +947,7 @@ function StickerPanel({ t, dispatch }: IProps) {
                 }}
                 stickerClick={(sticker: { url: string }) => {
                     console.log('Stipop sticker clicked:', sticker);
-                    addSticker(sticker.url, 'sticker');
+                    handleAddSticker(sticker.url, 'sticker');
                 }}
             />
         </div>
@@ -948,7 +1024,22 @@ function StickerPanel({ t, dispatch }: IProps) {
  * @returns {IProps}
  */
 function _mapStateToProps(state: IReduxState) {
-    return {};
+    const conference = getCurrentConference(state);
+    const localParticipant = getLocalParticipant(state);
+    
+    // Initialize background sync object if needed
+    initBackgroundSync();
+    
+    // Check if user is admin or has permission
+    const isAdmin = window.backgroundSync?.isAdmin || false;
+    const hasPermission = window.backgroundSync?.permissionList.has(localParticipant?.id || '') || false;
+    
+    return {
+        conference,
+        localParticipant,
+        isAdmin,
+        hasPermission
+    };
 }
 
 export default translate(connect(_mapStateToProps)(StickerPanel)); 

@@ -11,7 +11,11 @@ export const BACKGROUND_ACTION = {
     REVOKE_PERMISSION: 'revoke-permission',
     REQUEST_PERMISSION: 'request-permission',
     DRAWING_UPDATE: 'drawing-update', // New action for drawing sync
-    DRAWING_CLEAR: 'drawing-clear'     // New action to clear all drawings
+    DRAWING_CLEAR: 'drawing-clear',    // New action to clear all drawings
+    STICKER_ADD: 'sticker-add',       // New action for adding stickers
+    STICKER_MOVE: 'sticker-move',     // New action for moving stickers
+    STICKER_DELETE: 'sticker-delete', // New action for deleting stickers
+    STICKER_RESIZE: 'sticker-resize'  // New action for resizing stickers
 };
 
 // Define the interface for the global backgroundSync object
@@ -28,6 +32,7 @@ declare global {
             permissionList: Set<string>;
             permissionRequests: Map<string, {id: string, name: string, timestamp: number}>;
             lastDrawingSender: string | null;
+            lastStickerSender: string | null; // New property to track sticker changes
         };
     }
 }
@@ -47,7 +52,8 @@ export const initBackgroundSync = (): void => {
             adminId: null,
             permissionList: new Set(),
             permissionRequests: new Map(),
-            lastDrawingSender: null
+            lastDrawingSender: null,
+            lastStickerSender: null
         };
     }
 };
@@ -431,5 +437,212 @@ export function broadcastDrawingClear(
         conference.sendTextMessage(JSON.stringify(messageData));
     } catch (error) {
         console.error('Error broadcasting drawing clear:', error);
+    }
+}
+
+// Function to handle sticker message
+export function handleStickerMessage(
+    message: any,
+    conference: any,
+    localParticipant: any
+) {
+    // Only participants with permission should process sticker messages
+    const hasPermissionOrAdmin = isParticipantAdmin(localParticipant) || 
+                                hasBackgroundPermission(localParticipant?.id);
+    
+    if (!hasPermissionOrAdmin) {
+        return;
+    }
+    
+    // Update the lastStickerSender
+    if (window.backgroundSync) {
+        window.backgroundSync.lastStickerSender = message.sender;
+    }
+    
+    // Sticker messages can be processed by the main component
+    return message;
+}
+
+// Function to broadcast sticker add
+export function broadcastStickerAdd(
+    conference: any,
+    localParticipant: any,
+    stickerData: {
+        id: string,
+        type: 'emoji' | 'sticker' | 'gif',
+        content: string,
+        position: { x: number, y: number },
+        scale: number
+    }
+) {
+    if (!conference || !localParticipant) {
+        console.error('Cannot broadcast sticker: conference or localParticipant not available');
+        return;
+    }
+    
+    // Only users with permission can broadcast sticker updates
+    const hasPermissionOrAdmin = isParticipantAdmin(localParticipant) || 
+                              hasBackgroundPermission(localParticipant.id);
+    
+    if (!hasPermissionOrAdmin) {
+        console.log('No permission to broadcast stickers');
+        return;
+    }
+    
+    try {
+        // Create the message payload
+        const messageData = {
+            type: BACKGROUND_MESSAGE_TYPE,
+            action: BACKGROUND_ACTION.STICKER_ADD,
+            stickerData,
+            sender: localParticipant.id,
+            senderName: localParticipant.name || 'You',
+            timestamp: Date.now()
+        };
+        
+        // Send the text message to the conference
+        conference.sendTextMessage(JSON.stringify(messageData));
+        
+        // Update lastStickerSender
+        if (window.backgroundSync) {
+            window.backgroundSync.lastStickerSender = localParticipant.id;
+        }
+    } catch (error) {
+        console.error('Error broadcasting sticker add:', error);
+    }
+}
+
+// Function to broadcast sticker move
+export function broadcastStickerMove(
+    conference: any,
+    localParticipant: any,
+    stickerData: {
+        id: string,
+        position: { x: number, y: number }
+    }
+) {
+    if (!conference || !localParticipant) {
+        console.error('Cannot broadcast sticker move: conference or localParticipant not available');
+        return;
+    }
+    
+    // Only users with permission can broadcast sticker updates
+    const hasPermissionOrAdmin = isParticipantAdmin(localParticipant) || 
+                              hasBackgroundPermission(localParticipant.id);
+    
+    if (!hasPermissionOrAdmin) {
+        console.log('No permission to move stickers');
+        return;
+    }
+    
+    try {
+        // Create the message payload
+        const messageData = {
+            type: BACKGROUND_MESSAGE_TYPE,
+            action: BACKGROUND_ACTION.STICKER_MOVE,
+            stickerData,
+            sender: localParticipant.id,
+            senderName: localParticipant.name || 'You',
+            timestamp: Date.now()
+        };
+        
+        // Send the text message to the conference
+        conference.sendTextMessage(JSON.stringify(messageData));
+        
+        // Update lastStickerSender
+        if (window.backgroundSync) {
+            window.backgroundSync.lastStickerSender = localParticipant.id;
+        }
+    } catch (error) {
+        console.error('Error broadcasting sticker move:', error);
+    }
+}
+
+// Function to broadcast sticker resize
+export function broadcastStickerResize(
+    conference: any,
+    localParticipant: any,
+    stickerData: {
+        id: string,
+        scale: number
+    }
+) {
+    if (!conference || !localParticipant) {
+        console.error('Cannot broadcast sticker resize: conference or localParticipant not available');
+        return;
+    }
+    
+    // Only users with permission can broadcast sticker updates
+    const hasPermissionOrAdmin = isParticipantAdmin(localParticipant) || 
+                              hasBackgroundPermission(localParticipant.id);
+    
+    if (!hasPermissionOrAdmin) {
+        console.log('No permission to resize stickers');
+        return;
+    }
+    
+    try {
+        // Create the message payload
+        const messageData = {
+            type: BACKGROUND_MESSAGE_TYPE,
+            action: BACKGROUND_ACTION.STICKER_RESIZE,
+            stickerData,
+            sender: localParticipant.id,
+            senderName: localParticipant.name || 'You',
+            timestamp: Date.now()
+        };
+        
+        // Send the text message to the conference
+        conference.sendTextMessage(JSON.stringify(messageData));
+        
+        // Update lastStickerSender
+        if (window.backgroundSync) {
+            window.backgroundSync.lastStickerSender = localParticipant.id;
+        }
+    } catch (error) {
+        console.error('Error broadcasting sticker resize:', error);
+    }
+}
+
+// Function to broadcast sticker delete
+export function broadcastStickerDelete(
+    conference: any,
+    localParticipant: any,
+    stickerId: string
+) {
+    if (!conference || !localParticipant) {
+        console.error('Cannot broadcast sticker delete: conference or localParticipant not available');
+        return;
+    }
+    
+    // Only users with permission can broadcast sticker updates
+    const hasPermissionOrAdmin = isParticipantAdmin(localParticipant) || 
+                              hasBackgroundPermission(localParticipant.id);
+    
+    if (!hasPermissionOrAdmin) {
+        console.log('No permission to delete stickers');
+        return;
+    }
+    
+    try {
+        // Create the message payload
+        const messageData = {
+            type: BACKGROUND_MESSAGE_TYPE,
+            action: BACKGROUND_ACTION.STICKER_DELETE,
+            stickerId,
+            sender: localParticipant.id,
+            senderName: localParticipant.name || 'You',
+            timestamp: Date.now()
+        };
+        
+        // Send the text message to the conference
+        conference.sendTextMessage(JSON.stringify(messageData));
+        
+        // Update lastStickerSender
+        if (window.backgroundSync) {
+            window.backgroundSync.lastStickerSender = localParticipant.id;
+        }
+    } catch (error) {
+        console.error('Error broadcasting sticker delete:', error);
     }
 } 

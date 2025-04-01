@@ -7,9 +7,10 @@
     background-color: var(--defaultBackground, #f5f5f5) !important;
     background-size: cover !important;
     background-position: center center !important;
-    pointer-events: none !important; // Prevent large video container from capturing clicks
+//    pointer-events: none !important; // Prevent large video container from capturing clicks
     // Hide the video element inside
     #largeVideo {
+
         display: none !important;
     }
 }
@@ -21,10 +22,6 @@
     pointer-events: auto !important; // Ensure these elements can receive mouse events
 }
 
-// Make large video wrapper not block events
-#largeVideoWrapper {
-    pointer-events: none !important; // Don't block mouse events
-}
 
 // Hide dominantSpeaker elements
 #dominantSpeaker,
@@ -65,7 +62,7 @@
 // Make sure video containers are draggable
 .videocontainer {
     z-index: 9999 !important; // Extremely high z-index
-    pointer-events: auto !important; // Make sure it receives mouse events
+//    pointer-events: auto !important; // Make sure it receives mouse events
 }
 
 // Remove fixed positioning for filmstrip container to allow free movement
@@ -74,7 +71,7 @@
     z-index: 5 !important;
     width: 100% !important;
     height: 100% !important;
-    pointer-events: none !important; // Don't block mouse events
+    pointer-events: auto !important; // Don't block mouse events
 }
 
 // Allow videos to be positioned anywhere in the viewport

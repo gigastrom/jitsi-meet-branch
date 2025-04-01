@@ -49,7 +49,11 @@ const BACKGROUND_ACTION = {
     REQUEST_PERMISSION: 'request-permission',
     DRAWING_UPDATE: 'drawing-update',
     DRAWING_CLEAR: 'drawing-clear',
-    TEXT_UPDATE: 'text-update'
+    TEXT_UPDATE: 'text-update',
+    STICKER_ADD: 'sticker-add',
+    STICKER_MOVE: 'sticker-move',
+    STICKER_DELETE: 'sticker-delete',
+    STICKER_RESIZE: 'sticker-resize'
 };
 
 // Add a TextIcon component along with other icons
@@ -82,6 +86,8 @@ declare global {
             permissionRequests: Map<string, {id: string, name: string, timestamp: number}>;
             // Drawing related property
             lastDrawingSender: string | null;
+            // Sticker related property
+            lastStickerSender: string | null;
         };
     }
 }
@@ -1473,7 +1479,9 @@ import {
     // New drawing collaboration functions
     handleDrawingMessage,
     broadcastDrawingUpdate,
-    broadcastDrawingClear
+    broadcastDrawingClear,
+    // New sticker collaboration functions
+    handleStickerMessage
 } from './BackgroundPermissions';
 
 import PermissionsPanel from './PermissionsPanel';
@@ -1745,50 +1753,52 @@ const BackgroundSelector = () => {
                         const senderHasPermission = hasBackgroundPermission(parsedMessage.sender);
                         
                         if (senderIsAdmin || senderHasPermission) {
-                            // Update the current drawer state
-                            setCurrentDrawer(parsedMessage.senderName || 'Someone');
-                            
-                            // Clear the current drawer after 2 seconds
-                            setTimeout(() => {
-                                setCurrentDrawer(null);
-                            }, 2000);
-                            
-                            // Apply the drawing if we have a canvas context
+                            // Apply the drawing to our canvas
                             if (contextRef.current && canvasRef.current) {
                                 const ctx = contextRef.current;
+                                const remotePoints = drawingData.points;
                                 
-                                // Set drawing properties based on received data
+                                // Start a new path for this remote stroke
+                                ctx.beginPath();
+                                
+                                // Apply the remote drawing properties
                                 ctx.strokeStyle = drawingData.color;
                                 ctx.lineWidth = drawingData.lineWidth;
                                 
-                                if (drawingData.tool === 'pencil') {
-                                    ctx.globalCompositeOperation = 'source-over';
-                                } else if (drawingData.tool === 'eraser') {
+                                if (drawingData.tool === 'eraser') {
                                     ctx.globalCompositeOperation = 'destination-out';
+                                } else {
+                                    ctx.globalCompositeOperation = 'source-over';
                                 }
                                 
-                                // Draw the line
-                                ctx.beginPath();
-                                if (drawingData.points.length > 0) {
-                                    ctx.moveTo(drawingData.points[0].x, drawingData.points[0].y);
+                                // Move to the first point
+                                if (remotePoints.length > 0) {
+                                    ctx.moveTo(remotePoints[0].x, remotePoints[0].y);
                                     
-                                    for (let i = 1; i < drawingData.points.length; i++) {
-                                        ctx.lineTo(drawingData.points[i].x, drawingData.points[i].y);
+                                    // Draw lines to each subsequent point
+                                    for (let i = 1; i < remotePoints.length; i++) {
+                                        ctx.lineTo(remotePoints[i].x, remotePoints[i].y);
                                     }
                                     
+                                    // Actually draw the stroke
                                     ctx.stroke();
+                                    ctx.closePath();
                                 }
+                                
+                                // Show who is drawing
+                                setCurrentDrawer(parsedMessage.sender);
+                                const drawerName = parsedMessage.senderName || 'Someone';
+                                showBackgroundChangeIndicator(drawerName, `${drawerName} is drawing`);
+                                
+                                // Reset after a short delay
+                                setTimeout(() => {
+                                    setCurrentDrawer(null);
+                                }, 2000);
                             }
-                            
-                            // Show indicator for who is drawing
-                            showBackgroundChangeIndicator(
-                                parsedMessage.senderName, 
-                                `${parsedMessage.senderName} is drawing`
-                            );
                         }
                     }
                 }
-                // Handle clear canvas messages
+                // Handle drawing clear message
                 else if (parsedMessage.action === BACKGROUND_ACTION.DRAWING_CLEAR) {
                     // Check if sender has permission
                     const senderParticipant = Array.from(participants.values())
@@ -1797,16 +1807,15 @@ const BackgroundSelector = () => {
                     const senderIsAdmin = isParticipantAdmin(senderParticipant);
                     const senderHasPermission = hasBackgroundPermission(parsedMessage.sender);
                     
+                    // Only apply if sender has permission
                     if (senderIsAdmin || senderHasPermission) {
-                        // Clear the canvas if we have a context
+                        // Clear the canvas
                         if (contextRef.current && canvasRef.current) {
                             contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
                             
-                            // Show indicator for who cleared the drawing
-                            showBackgroundChangeIndicator(
-                                parsedMessage.senderName, 
-                                `${parsedMessage.senderName} cleared the drawing`
-                            );
+                            // Show who cleared the canvas
+                            const clearerName = parsedMessage.senderName || 'Someone';
+                            showBackgroundChangeIndicator(clearerName, `${clearerName} cleared the canvas`);
                         }
                     }
                 }
@@ -1823,35 +1832,153 @@ const BackgroundSelector = () => {
                         const senderIsAdmin = isParticipantAdmin(senderParticipant);
                         const senderHasPermission = hasBackgroundPermission(parsedMessage.sender);
                         
+                        // Only apply if sender has permission
                         if (senderIsAdmin || senderHasPermission) {
-                            // Set the current drawer/text creator
-                            setCurrentDrawer(parsedMessage.senderName);
+                            // Add the text to our state
+                            setTexts(prev => {
+                                // If text already exists, update it
+                                const existingIndex = prev.findIndex(t => t.id === textData.id);
+                                if (existingIndex >= 0) {
+                                    const newTexts = [...prev];
+                                    newTexts[existingIndex] = textData;
+                                    return newTexts;
+                                }
+                                // Otherwise add as new
+                                return [...prev, textData];
+                            });
                             
-                            // Clear the drawer after 2 seconds
-                            setTimeout(() => {
-                                setCurrentDrawer(null);
-                            }, 2000);
-                            
-                            // Apply the text if we have a canvas context
-                            if (contextRef.current && canvasRef.current) {
+                            // Redraw the text on the canvas
+                            if (contextRef.current) {
                                 const ctx = contextRef.current;
-                                
-                                // Set text properties, use the fontSize from the message or default to 18
-                                const fontSize = textData.fontSize || 18;
-                                ctx.font = `${fontSize}px Arial`;
+                                ctx.font = `${textData.fontSize}px Arial`;
                                 ctx.fillStyle = textData.color;
-                                
-                                // Draw the text
                                 ctx.fillText(textData.text, textData.position.x, textData.position.y);
-                                
-                                // Add to local texts state
-                                setTexts(prev => [...prev, textData]);
-                                
-                                // Show indicator for who added text
-                                showBackgroundChangeIndicator(
-                                    parsedMessage.senderName, 
-                                    `${parsedMessage.senderName} added text`
+                            }
+                            
+                            // Show who added text
+                            const textAdderName = parsedMessage.senderName || 'Someone';
+                            showBackgroundChangeIndicator(textAdderName, `${textAdderName} added text`);
+                        }
+                    }
+                }
+                // Handle sticker messages (add, move, resize, delete)
+                else if (parsedMessage.action === BACKGROUND_ACTION.STICKER_ADD ||
+                        parsedMessage.action === BACKGROUND_ACTION.STICKER_MOVE ||
+                        parsedMessage.action === BACKGROUND_ACTION.STICKER_RESIZE ||
+                        parsedMessage.action === BACKGROUND_ACTION.STICKER_DELETE) {
+                    
+                    // Process the sticker message through our handler
+                    const stickerMessage = handleStickerMessage(parsedMessage, conference, localParticipant);
+                    
+                    if (!stickerMessage) {
+                        return; // No permission or other issue
+                    }
+                    
+                    // Only process if sender is not self to avoid duplicates
+                    if (parsedMessage.sender !== localParticipant?.id) {
+                        // Check if sender has permission
+                        const senderParticipant = Array.from(participants.values())
+                            .find((p: any) => p.id === parsedMessage.sender);
+                        
+                        const senderIsAdmin = isParticipantAdmin(senderParticipant);
+                        const senderHasPermission = hasBackgroundPermission(parsedMessage.sender);
+                        
+                        // Only apply if sender has permission
+                        if (senderIsAdmin || senderHasPermission) {
+                            const senderName = parsedMessage.senderName || 'Someone';
+                            
+                            // Handle sticker add
+                            if (parsedMessage.action === BACKGROUND_ACTION.STICKER_ADD) {
+                                const { stickerData } = parsedMessage;
+                                const backgroundContainer = document.querySelector(
+                                    '#largeVideoContainer, #filmstripRemoteVideosContainer, .videocontainer, .filmstrip, #videospace'
                                 );
+                                
+                                if (backgroundContainer) {
+                                    // Create the sticker element
+                                    const stickerElement = document.createElement('div');
+                                    stickerElement.className = 'sticker-item on-screen';
+                                    stickerElement.id = stickerData.id;
+                                    
+                                    // Apply styles
+                                    stickerElement.style.position = 'absolute';
+                                    stickerElement.style.zIndex = '9999';
+                                    stickerElement.style.left = `${stickerData.position.x}%`;
+                                    stickerElement.style.top = `${stickerData.position.y}%`;
+                                    stickerElement.style.padding = '5px';
+                                    stickerElement.style.borderRadius = '4px';
+                                    stickerElement.style.cursor = 'move';
+                                    stickerElement.style.userSelect = 'none';
+                                    
+                                    // Create the content
+                                    let contentElement;
+                                    if (stickerData.type === 'emoji') {
+                                        contentElement = document.createElement('span');
+                                        contentElement.textContent = stickerData.content;
+                                        contentElement.style.fontSize = '8vmin';
+                                        contentElement.style.transform = `scale(${stickerData.scale})`;
+                                        contentElement.style.transformOrigin = 'center';
+                                        contentElement.style.display = 'flex';
+                                        contentElement.style.alignItems = 'center';
+                                        contentElement.style.justifyContent = 'center';
+                                    } else {
+                                        contentElement = document.createElement('img');
+                                        (contentElement as HTMLImageElement).src = stickerData.content;
+                                        (contentElement as HTMLImageElement).alt = 'Sticker';
+                                        contentElement.style.width = '25%';
+                                        contentElement.style.maxWidth = '25vw';
+                                        contentElement.style.height = 'auto';
+                                        contentElement.style.transform = `scale(${stickerData.scale})`;
+                                        contentElement.style.transformOrigin = 'center';
+                                    }
+                                    
+                                    stickerElement.appendChild(contentElement);
+                                    backgroundContainer.appendChild(stickerElement);
+                                    
+                                    // Show who added the sticker
+                                    showBackgroundChangeIndicator(senderName, `${senderName} added a sticker`);
+                                }
+                            }
+                            // Handle sticker move
+                            else if (parsedMessage.action === BACKGROUND_ACTION.STICKER_MOVE) {
+                                const { stickerData } = parsedMessage;
+                                const stickerElement = document.getElementById(stickerData.id);
+                                
+                                if (stickerElement) {
+                                    stickerElement.style.left = `${stickerData.position.x}%`;
+                                    stickerElement.style.top = `${stickerData.position.y}%`;
+                                    
+                                    // Remove transform that might interfere with positioning
+                                    stickerElement.style.transform = 'none';
+                                    
+                                    // Show who moved the sticker
+                                    showBackgroundChangeIndicator(senderName, `${senderName} moved a sticker`);
+                                }
+                            }
+                            // Handle sticker resize
+                            else if (parsedMessage.action === BACKGROUND_ACTION.STICKER_RESIZE) {
+                                const { stickerData } = parsedMessage;
+                                const stickerElement = document.getElementById(stickerData.id);
+                                
+                                if (stickerElement && stickerElement.firstChild) {
+                                    const contentElement = stickerElement.firstChild as HTMLElement;
+                                    contentElement.style.transform = `scale(${stickerData.scale})`;
+                                    
+                                    // Show who resized the sticker
+                                    showBackgroundChangeIndicator(senderName, `${senderName} resized a sticker`);
+                                }
+                            }
+                            // Handle sticker delete
+                            else if (parsedMessage.action === BACKGROUND_ACTION.STICKER_DELETE) {
+                                const stickerId = parsedMessage.stickerId;
+                                const stickerElement = document.getElementById(stickerId);
+                                
+                                if (stickerElement) {
+                                    stickerElement.remove();
+                                    
+                                    // Show who deleted the sticker
+                                    showBackgroundChangeIndicator(senderName, `${senderName} removed a sticker`);
+                                }
                             }
                         }
                     }
@@ -1900,7 +2027,8 @@ const BackgroundSelector = () => {
                     adminId: null,
                     permissionList: new Set(),
                     permissionRequests: new Map(),
-                    lastDrawingSender: null
+                    lastDrawingSender: null,
+                    lastStickerSender: null
                 };
             }
             
