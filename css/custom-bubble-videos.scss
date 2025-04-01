@@ -1,28 +1,37 @@
 /* Custom styles for video bubbles */
 
+/* Full page background styles */
+html, body {
+    background-color: #f5f5f5 !important;
+    background-position: center !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    min-height: 100vh;
+    min-width: 100vw;
+    margin: 0;
+    padding: 0;
+}
+
+#app, #videoconference_page {
+    background-color: transparent !important;
+}
 
 /* Hide the large video display */
-
-
+#largeVideoContainer {
+    background-color: transparent !important;
+    z-index: 1 !important;
+}
 
 /* Style for the filmstrip */
-
-
 .filmstrip {
     position: relative !important;
     background: transparent !important;
     z-index: 5 !important;
     pointer-events: none !important;
-
     /* Allow clicking through the filmstrip container */
 }
 
-
-/* Remove any background from the filmstrip */
-
-
 /* Style for the video container */
-
 .videocontainer {
     position: absolute !important;
     border-radius: 50% !important;
@@ -37,15 +46,14 @@
     /* Make sure it catches pointer events */
     height: 120px !important;
     width: 120px !important;
+    background-color: transparent !important;
 }
 
 .videocontainer:hover {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3) !important;
 }
 
-
 /* Make video circular */
-
 .filmstrip video {
     object-fit: cover !important;
     border-radius: 50% !important;
@@ -53,38 +61,27 @@
     width: 100% !important;
 }
 
-
 /* Fix pointer events on key elements */
-
-
 #largeVideoWrapper,
 #videospace,
 #largeVideoContainer {
-//    pointer-events: none !important;
+    pointer-events: auto !important;
+    background-color: transparent !important; 
 }
 
-
 /* Make sure all content within the video container can be clicked/interacted with */
-
 .videocontainer * {
     pointer-events: auto !important;
 }
 
-
-/* Background styles */
-
+/* Video space container - should be transparent to show body background */
 #videospace {
-    background-color: #f5f5f5 !important;
-    background-position: center !important;
-    background-size: cover !important;
-    background-repeat: no-repeat !important;
+    background-color: transparent !important;
     min-height: 100vh;
     min-width: 100vw;
 }
 
-
 /* Background selector styles */
-
 .background-selector {
     position: absolute;
     top: 20px;
@@ -120,39 +117,29 @@
     transform: scale(1.1);
 }
 
-
 /* Style the fixed avatar in the video container */
-
 .avatar-container {
     width: 100% !important;
     height: 100% !important;
 }
 
-
 /* Dragging class */
-
 .videocontainer.dragging {
     opacity: 0.8;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4) !important;
 }
 
-
 /* Fix indicators to make them visible within the bubble */
-
 .indicator {
     z-index: 1002 !important;
 }
 
-
 /* Hide any overflow */
-
 body {
     overflow: hidden;
 }
 
-
 /* Make the vertical filmstrip fully transparent */
-
 .vertical-filmstrip {
     background: transparent !important;
 }

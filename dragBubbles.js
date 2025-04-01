@@ -332,23 +332,38 @@
             selector.querySelectorAll('.background-option').forEach(option => {
                 option.addEventListener('click', function() {
                     const bgValue = this.getAttribute('data-background');
-                    const videospace = document.getElementById('videospace');
-                    if (videospace) {
-                        videospace.style.backgroundColor = bgValue;
+                    
+                    // Apply to the entire page (html and body)
+                    document.documentElement.style.backgroundColor = bgValue;
+                    document.body.style.backgroundColor = bgValue;
+                    
+                    // Make sure all container elements are transparent
+                    const containers = document.querySelectorAll('#videospace, #largeVideoContainer, .videocontainer');
+                    containers.forEach(container => {
+                        if (container) {
+                            container.style.backgroundColor = 'transparent';
+                        }
+                    });
 
-                        // Save selection
-                        localStorage.setItem('selectedBackground', bgValue);
-                    }
+                    // Save selection
+                    localStorage.setItem('selectedBackground', bgValue);
                 });
             });
 
             // Load saved background
             const savedBg = localStorage.getItem('selectedBackground');
             if (savedBg) {
-                const videospace = document.getElementById('videospace');
-                if (videospace) {
-                    videospace.style.backgroundColor = savedBg;
-                }
+                // Apply to the entire page (html and body)
+                document.documentElement.style.backgroundColor = savedBg;
+                document.body.style.backgroundColor = savedBg;
+                
+                // Make sure all container elements are transparent
+                const containers = document.querySelectorAll('#videospace, #largeVideoContainer, .videocontainer');
+                containers.forEach(container => {
+                    if (container) {
+                        container.style.backgroundColor = 'transparent';
+                    }
+                });
             }
         }
     }

@@ -33,6 +33,7 @@ declare global {
             permissionRequests: Map<string, {id: string, name: string, timestamp: number}>;
             lastDrawingSender: string | null;
             lastStickerSender: string | null; // New property to track sticker changes
+            lastBackgroundReceiveTime: number | null; // New property to prevent broadcast loops
         };
     }
 }
@@ -53,7 +54,8 @@ export const initBackgroundSync = (): void => {
             permissionList: new Set(),
             permissionRequests: new Map(),
             lastDrawingSender: null,
-            lastStickerSender: null
+            lastStickerSender: null,
+            lastBackgroundReceiveTime: null
         };
     }
 };

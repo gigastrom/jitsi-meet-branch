@@ -88,6 +88,8 @@ declare global {
             lastDrawingSender: string | null;
             // Sticker related property
             lastStickerSender: string | null;
+            // Background broadcast control
+            lastBackgroundReceiveTime: number | null;
         };
     }
 }
@@ -1678,6 +1680,8 @@ const BackgroundSelector = () => {
             // Store sender name for notifications
             if (window.backgroundSync) {
                 window.backgroundSync.ownerName = senderName;
+                // Track timestamp to prevent re-broadcasting
+                window.backgroundSync.lastBackgroundReceiveTime = Date.now();
             }
             
             // Apply the background visually
@@ -1687,18 +1691,27 @@ const BackgroundSelector = () => {
                 // Apply in a more direct way with DOM manipulation
                 const background = findBackgroundById(backgroundId);
                 if (background) {
-                    // Get all possible video containers - very aggressive to ensure it works
-                    const videoContainers = document.querySelectorAll('.videocontainer, #largeVideoContainer, .large-video-container');
-                    videoContainers.forEach(container => {
-                        const el = container as HTMLElement;
-                        if (background.type === 'image') {
-                            el.style.backgroundImage = background.value;
-                            el.style.backgroundSize = 'cover';
-                            el.style.backgroundPosition = 'center';
-                            el.style.backgroundRepeat = 'no-repeat';
-                        } else {
-                            el.style.background = background.value;
-                        }
+                    // Apply to the entire page (html and body) for full-page background
+                    if (background.type === 'image') {
+                        document.documentElement.style.backgroundImage = background.value;
+                        document.documentElement.style.backgroundSize = 'cover';
+                        document.documentElement.style.backgroundPosition = 'center center';
+                        document.documentElement.style.backgroundRepeat = 'no-repeat';
+                        
+                        document.body.style.backgroundImage = background.value;
+                        document.body.style.backgroundSize = 'cover';
+                        document.body.style.backgroundPosition = 'center center';
+                        document.body.style.backgroundRepeat = 'no-repeat';
+                    } else {
+                        // For colors and gradients
+                        document.documentElement.style.background = background.value;
+                        document.body.style.background = background.value;
+                    }
+                    
+                    // Make sure all containers are transparent
+                    const containers = document.querySelectorAll('#largeVideoContainer, .videocontainer, #videospace, #filmstripRemoteVideosContainer');
+                    containers.forEach(container => {
+                        (container as HTMLElement).style.backgroundColor = 'transparent';
                     });
                 }
                 
@@ -1727,6 +1740,12 @@ const BackgroundSelector = () => {
                 // If it's an update message, apply the background
                 if (parsedMessage.action === BACKGROUND_ACTION.UPDATE) {
                     const { backgroundId, sender, senderName } = parsedMessage;
+                    
+                    // Skip processing if we're the original sender of this message
+                    if (sender === localParticipant?.id) {
+                        console.log('Ignoring our own background message');
+                        return;
+                    }
                     
                     // Check if sender has permission to change backgrounds
                     const senderParticipant = Array.from(participants.values())
@@ -2011,31 +2030,25 @@ const BackgroundSelector = () => {
         // Function to broadcast background change to all participants
         const broadcastBackgroundChange = (backgroundId: string) => {
             if (!conference || !localParticipant) {
-                console.log('Cannot broadcast background: conference or localParticipant not available');
+                console.error('Cannot broadcast background: conference or localParticipant not available');
                 return;
             }
             
-            // Update global state first
-            if (!window.backgroundSync) {
-                window.backgroundSync = {
-                    activeCollaboration: false,
-                    currentBackground: null,
-                    owner: null,
-                    ownerName: null,
-                    participants: new Set(),
-                    isAdmin: false,
-                    adminId: null,
-                    permissionList: new Set(),
-                    permissionRequests: new Map(),
-                    lastDrawingSender: null,
-                    lastStickerSender: null
-                };
+            // Skip broadcasting if this is the same as the current background and was just received
+            // This prevents re-broadcasting a background that was just applied from a remote update
+            if (backgroundId === sharedBackground && window.backgroundSync?.lastBackgroundReceiveTime 
+                && (Date.now() - window.backgroundSync.lastBackgroundReceiveTime < 2000)) {
+                console.log('Skipping re-broadcast of recently received background');
+                return;
             }
             
-            window.backgroundSync.activeCollaboration = !!backgroundId;
-            window.backgroundSync.currentBackground = backgroundId;
-            window.backgroundSync.owner = backgroundId ? localParticipant.id : null;
-            window.backgroundSync.ownerName = localParticipant.name || 'You';
+            // Only owners or those with permission can change backgrounds
+            const hasPermissionOrOwner = isAdmin || isOwner || hasPermission;
+            
+            if (!hasPermissionOrOwner) {
+                console.log('No permission to broadcast background');
+                return;
+            }
             
             try {
                 // Create the message payload
@@ -2048,24 +2061,24 @@ const BackgroundSelector = () => {
                     timestamp: Date.now()
                 };
                 
-                // Send the text message to the conference - this is how Jitsi chat works
+                // Send the text message to the conference
                 conference.sendTextMessage(JSON.stringify(messageData));
                 
-                console.log('Sent background message:', messageData);
+                // Update local state to reflect the shared background
+                setSharedBackground(backgroundId);
+                setSharedBackgroundOwner(localParticipant.id);
+                setCollaborativeMode(true);
+                
+                // Update global state
+                if (window.backgroundSync) {
+                    window.backgroundSync.activeCollaboration = true;
+                    window.backgroundSync.currentBackground = backgroundId;
+                    window.backgroundSync.owner = localParticipant.id;
+                    window.backgroundSync.ownerName = localParticipant.name || 'You';
+                }
             } catch (error) {
-                console.error('Error sending background message:', error);
+                console.error('Error broadcasting background:', error);
             }
-            
-            // Also apply locally - we are the owner
-            setSharedBackground(backgroundId);
-            setSharedBackgroundOwner(localParticipant.id);
-            showBackgroundChangeIndicator(localParticipant.name || 'You');
-            
-            // Dispatch Redux action to track collaborative background
-            dispatch(createSharedBackgroundEvent({
-                backgroundId,
-                enabled: !!backgroundId
-            }));
         };
         
         // Join event
@@ -2264,20 +2277,28 @@ const BackgroundSelector = () => {
         const background = findBackgroundById(backgroundId);
         
         if (background) {
-            const largeVideoContainer = document.getElementById('largeVideoContainer');
-            
-            if (largeVideoContainer) {
-                // For images, ensure no-repeat and proper sizing
-                if (background.type === 'image') {
-                    largeVideoContainer.style.backgroundImage = background.value;
-                    largeVideoContainer.style.backgroundSize = 'cover';
-                    largeVideoContainer.style.backgroundPosition = 'center center';
-                    largeVideoContainer.style.backgroundRepeat = 'no-repeat';
-                } else {
-                    // For colors and gradients
-                    largeVideoContainer.style.background = background.value;
-                }
+            // Apply to the entire page (html and body) for full-page background
+            if (background.type === 'image') {
+                document.documentElement.style.backgroundImage = background.value;
+                document.documentElement.style.backgroundSize = 'cover';
+                document.documentElement.style.backgroundPosition = 'center center';
+                document.documentElement.style.backgroundRepeat = 'no-repeat';
+                
+                document.body.style.backgroundImage = background.value;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center center';
+                document.body.style.backgroundRepeat = 'no-repeat';
+            } else {
+                // For colors and gradients
+                document.documentElement.style.background = background.value;
+                document.body.style.background = background.value;
             }
+            
+            // Make sure all containers are transparent
+            const containers = document.querySelectorAll('#largeVideoContainer, .videocontainer, #videospace, #filmstripRemoteVideosContainer');
+            containers.forEach(container => {
+                (container as HTMLElement).style.backgroundColor = 'transparent';
+            });
         }
     };
 

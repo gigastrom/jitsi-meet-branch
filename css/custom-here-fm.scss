@@ -2,15 +2,30 @@
  * Custom CSS for here.fm style UI with circular video bubbles
  */
 
-// Hide large video container content but keep the container for background
-#largeVideoContainer {
+// Apply background to the full page
+html, body {
     background-color: var(--defaultBackground, #f5f5f5) !important;
     background-size: cover !important;
     background-position: center center !important;
-//    pointer-events: none !important; // Prevent large video container from capturing clicks
+    background-repeat: no-repeat !important;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+// Main container styles - ensure it's transparent to show the body background
+#app, #videoconference_page, #largeVideoContainer {
+    background-color: transparent !important;
+    pointer-events: auto !important; // Enable pointer events
+}
+
+// Hide large video container content but keep the container
+#largeVideoContainer {
+    background-color: transparent !important; // Make transparent to show body background
+    z-index: 1 !important; // Lower z-index to ensure it doesn't block interactions
+    
     // Hide the video element inside
     #largeVideo {
-
         display: none !important;
     }
 }
@@ -21,7 +36,6 @@
 #filmstripLocalVideo {
     pointer-events: auto !important; // Ensure these elements can receive mouse events
 }
-
 
 // Hide dominantSpeaker elements
 #dominantSpeaker,
@@ -62,7 +76,7 @@
 // Make sure video containers are draggable
 .videocontainer {
     z-index: 9999 !important; // Extremely high z-index
-//    pointer-events: auto !important; // Make sure it receives mouse events
+    background-color: transparent !important; // Ensure video containers don't have background
 }
 
 // Remove fixed positioning for filmstrip container to allow free movement
@@ -72,6 +86,7 @@
     width: 100% !important;
     height: 100% !important;
     pointer-events: auto !important; // Don't block mouse events
+    background-color: transparent !important;
 }
 
 // Allow videos to be positioned anywhere in the viewport
@@ -82,6 +97,7 @@
     padding: 0 !important;
     box-sizing: border-box !important;
     pointer-events: none !important; // Allow clicking through the container
+    background-color: transparent !important;
     &__videos {
         position: static !important;
         pointer-events: auto !important; // Re-enable pointer events for videos
@@ -108,6 +124,7 @@
     width: 120px !important;
     position: absolute !important; // Make absolutely positioned
     transition: none !important; // Remove transitions for smooth dragging
+    background-color: transparent !important;
     // Initial positions - will be overridden by JS
     &#filmstripLocalVideoContainer {
         bottom: 80px !important;
