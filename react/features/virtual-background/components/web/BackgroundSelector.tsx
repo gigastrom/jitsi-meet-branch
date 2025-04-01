@@ -1443,6 +1443,15 @@ const BACKGROUNDS = [
     },
 ];
 
+// Define a proper interface for custom backgrounds that includes dataUrl
+interface CustomBackground {
+    id: string;
+    value: string;
+    type: string;
+    name: string;
+    dataUrl?: string;
+}
+
 // Add theme colors
 const THEMES = [
     { id: 'default', mainColor: 'rgba(28, 28, 45, 0.85)', accentColor: 'linear-gradient(45deg, #FF5F6D 0%, #FFC371 100%)', name: 'Default' },
@@ -1502,6 +1511,47 @@ const getBrightness = (hexColor: string): number => {
     return (r * 299 + g * 587 + b * 114) / 1000;
 };
 
+// Update the interface for background objects to include dataUrl
+interface IBackground {
+    id: string;
+    value: string;
+    type: string;
+    name: string;
+    thumbnail?: string;
+    dataUrl?: string; // Add dataUrl for base64 images
+}
+
+// Update findBackgroundById to return the proper type with dataUrl
+const findBackgroundById = (backgroundId: string): IBackground => {
+    // First check in built-in backgrounds
+    const builtInBg = BACKGROUNDS.find(bg => bg.id === backgroundId);
+    if (builtInBg) {
+        return {
+            ...builtInBg,
+            thumbnail: builtInBg.type === 'image' 
+                ? builtInBg.value.replace('url(', '').replace(')', '') 
+                : undefined
+        };
+    }
+    
+    // Then check in custom backgrounds
+    const customBg = customBackgrounds.find(bg => bg.id === backgroundId);
+    if (customBg) {
+        // For custom backgrounds with dataUrl property (for base64 images)
+        return {
+            ...customBg,
+            // If the custom background has a dataUrl property, use it for thumbnail
+            thumbnail: customBg.dataUrl || customBg.value.replace('url(', '').replace(')', '')
+        };
+    }
+    
+    // Default fallback
+    return {
+        ...BACKGROUNDS[0],
+        thumbnail: undefined
+    };
+};
+
 /**
  * Component for selecting the background color or gradient in a here.fm style UI.
  *
@@ -1512,7 +1562,7 @@ const BackgroundSelector = () => {
     const dispatch = useDispatch();
     const [selectedBackground, setSelectedBackground] = useState('default');
     const [showOptions, setShowOptions] = useState(false);
-    const [customBackgrounds, setCustomBackgrounds] = useState<Array<{id: string, value: string, type: string, name: string, thumbnail?: string}>>([]);
+    const [customBackgrounds, setCustomBackgrounds] = useState<CustomBackground[]>([]);
     const [showThemeSelector, setShowThemeSelector] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState('default');
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
@@ -1638,6 +1688,7 @@ const BackgroundSelector = () => {
             type: string;
             name: string;
             thumbnail?: string;
+            dataUrl?: string; // Add dataUrl property for base64 stored images
         } => {
             // First check in built-in backgrounds
             const builtInBg = BACKGROUNDS.find(bg => bg.id === backgroundId);
@@ -1655,9 +1706,8 @@ const BackgroundSelector = () => {
             if (customBg) {
                 return {
                     ...customBg,
-                    thumbnail: customBg.type === 'image' 
-                        ? customBg.value.replace('url(', '').replace(')', '') 
-                        : undefined
+                    // If the custom background has a dataUrl property, use it for thumbnail
+                    thumbnail: customBg.dataUrl || customBg.value.replace('url(', '').replace(')', '')
                 };
             }
             
@@ -1669,7 +1719,7 @@ const BackgroundSelector = () => {
         };
         
         // Function to forcefully apply a background to everyone
-        const forceApplyBackground = (backgroundId: string, senderId: string, senderName: string) => {
+        const forceApplyBackground = (backgroundId: string, senderId: string, senderName: string, backgroundToApply?: IBackground) => {
             console.log(`Force applying background: ${backgroundId} from ${senderId}`);
             
             // Update UI state
@@ -1688,17 +1738,32 @@ const BackgroundSelector = () => {
             if (backgroundId) {
                 setSelectedBackground(backgroundId);
                 
-                // Apply in a more direct way with DOM manipulation
-                const background = findBackgroundById(backgroundId);
+                // Use provided data first, then try finding it locally
+                const background = backgroundToApply || findBackgroundById(backgroundId);
+
                 if (background) {
                     // Apply to the entire page (html and body) for full-page background
                     if (background.type === 'image') {
-                        document.documentElement.style.backgroundImage = background.value;
+                        // For images, get the appropriate value to use
+                        let backgroundValue;
+                        
+                        // If we have a dataUrl, use it directly with url()
+                        if (background.dataUrl) {
+                            backgroundValue = `url(${background.dataUrl})`;
+                        } 
+                        // Otherwise use the value property which might already have url() or might need it
+                        else {
+                            backgroundValue = background.value.startsWith('url(') 
+                                ? background.value 
+                                : `url(${background.value})`;
+                        }
+                            
+                        document.documentElement.style.backgroundImage = backgroundValue;
                         document.documentElement.style.backgroundSize = 'cover';
                         document.documentElement.style.backgroundPosition = 'center center';
                         document.documentElement.style.backgroundRepeat = 'no-repeat';
                         
-                        document.body.style.backgroundImage = background.value;
+                        document.body.style.backgroundImage = backgroundValue;
                         document.body.style.backgroundSize = 'cover';
                         document.body.style.backgroundPosition = 'center center';
                         document.body.style.backgroundRepeat = 'no-repeat';
@@ -1739,7 +1804,7 @@ const BackgroundSelector = () => {
                 
                 // If it's an update message, apply the background
                 if (parsedMessage.action === BACKGROUND_ACTION.UPDATE) {
-                    const { backgroundId, sender, senderName } = parsedMessage;
+                    const { backgroundId, sender, senderName, customBackground } = parsedMessage;
                     
                     // Skip processing if we're the original sender of this message
                     if (sender === localParticipant?.id) {
@@ -1755,7 +1820,39 @@ const BackgroundSelector = () => {
                     const senderHasPermission = hasBackgroundPermission(sender);
                     
                     if (senderIsAdmin || senderHasPermission) {
-                        forceApplyBackground(backgroundId, sender, senderName);
+                        // If we received a custom background, add it to our collection
+                        let backgroundToApply: IBackground | undefined = undefined;
+                        if (customBackground && customBackground.id) {
+                            // Check if we already have this background
+                            const existingIndex = customBackgrounds.findIndex(bg => bg.id === customBackground.id);
+                            
+                            let updatedBackgrounds;
+                            if (existingIndex >= 0) {
+                                // Update existing background
+                                updatedBackgrounds = [...customBackgrounds];
+                                updatedBackgrounds[existingIndex] = customBackground;
+                            } else {
+                                // Add new background
+                                updatedBackgrounds = [...customBackgrounds, customBackground];
+                            }
+                            
+                            // Update state and localStorage
+                            setCustomBackgrounds(updatedBackgrounds);
+                            try {
+                                localStorage.setItem('hereFmCustomBackgrounds', JSON.stringify(updatedBackgrounds));
+                            } catch (e) {
+                                console.error('Error saving shared custom backgrounds:', e);
+                            }
+                            backgroundToApply = customBackground; // Prepare the received data for direct use
+                        }
+                        
+                        // Apply the background
+                        forceApplyBackground(backgroundId, sender, senderName, backgroundToApply); // Pass received data
+                        
+                        // Mark the time we received this background to avoid loops
+                        if (window.backgroundSync) {
+                            window.backgroundSync.lastBackgroundReceiveTime = Date.now();
+                        }
                     }
                 } 
                 // Handle drawing update messages
@@ -2051,6 +2148,11 @@ const BackgroundSelector = () => {
             }
             
             try {
+                // Check if we're broadcasting a custom background
+                const customBackground = backgroundId.startsWith('custom-') ? 
+                    customBackgrounds.find(bg => bg.id === backgroundId) : 
+                    null;
+                
                 // Create the message payload
                 const messageData = {
                     type: BACKGROUND_MESSAGE_TYPE,
@@ -2058,15 +2160,40 @@ const BackgroundSelector = () => {
                     backgroundId,
                     sender: localParticipant.id,
                     senderName: localParticipant.name || 'You',
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    customBackground // Include custom background data for sharing
                 };
                 
                 // Send the text message to the conference
-                conference.sendTextMessage(JSON.stringify(messageData));
+                // Try using either sendCommand or sendTextMessage based on what's available
+                try {
+                    if (typeof conference.sendCommand === 'function') {
+                        conference.sendCommand('background-change', {
+                            value: JSON.stringify(messageData)
+                        });
+                    } else {
+                        // Fallback to sendTextMessage if sendCommand is not available
+                        conference.sendTextMessage(JSON.stringify(messageData));
+                    }
+                } catch (err) {
+                    console.error('Error sending background message:', err);
+                    // Last resort fallback - try APP.conference
+                    try {
+                        // Use type assertion to bypass TypeScript error since we know this might be available at runtime
+                        const appConference = window.APP?.conference as any;
+                        if (appConference && typeof appConference.sendCommand === 'function') {
+                            appConference.sendCommand('background-change', {
+                                value: JSON.stringify(messageData)
+                            });
+                        }
+                    } catch (finalErr) {
+                        console.error('Final fallback also failed:', finalErr);
+                    }
+                }
                 
                 // Update local state to reflect the shared background
-                setSharedBackground(backgroundId);
-                setSharedBackgroundOwner(localParticipant.id);
+            setSharedBackground(backgroundId);
+            setSharedBackgroundOwner(localParticipant.id);
                 setCollaborativeMode(true);
                 
                 // Update global state
@@ -2211,6 +2338,67 @@ const BackgroundSelector = () => {
             }
         }
 
+        // Set up message handler for background changes
+        if (conference) {
+            // Listen for text messages
+            conference.on('message_received', messageHandlerWrapper);
+           
+            // Also listen for command messages (which might be used on some platforms)
+            conference.addCommandListener('background-change', (data: any) => {
+                try {
+                    // Extract message from command data
+                    if (data && data.value) {
+                        const parsedMessage = JSON.parse(data.value);
+                        // Process the message similar to text messages
+                        if (parsedMessage.type === BACKGROUND_MESSAGE_TYPE) {
+                            if (parsedMessage.action === BACKGROUND_ACTION.UPDATE) {
+                                const { backgroundId, sender, senderName, customBackground } = parsedMessage;
+                                
+                                // Skip processing if we're the original sender
+                                if (sender === localParticipant?.id) {
+                                    return;
+                                }
+                                
+                                // Process custom background data and apply it
+                                let backgroundToApply: IBackground | undefined = undefined;
+                                if (customBackground && customBackground.id) {
+                                    // Add or update the custom background in our collection
+                                    const existingIndex = customBackgrounds.findIndex(bg => bg.id === customBackground.id);
+                                    let updatedBackgrounds;
+                                    if (existingIndex >= 0) {
+                                        updatedBackgrounds = [...customBackgrounds];
+                                        updatedBackgrounds[existingIndex] = customBackground;
+                                    } else {
+                                        updatedBackgrounds = [...customBackgrounds, customBackground];
+                                    }
+                                    
+                                    // Update state
+                                    setCustomBackgrounds(updatedBackgrounds);
+                                    try {
+                                        localStorage.setItem('hereFmCustomBackgrounds', JSON.stringify(updatedBackgrounds));
+                                    } catch (e) {
+                                        console.error('Error saving custom backgrounds:', e);
+                                    }
+                                    
+                                    backgroundToApply = customBackground;
+                                }
+                                
+                                // Apply the background immediately with the direct data
+                                forceApplyBackground(backgroundId, sender, senderName, backgroundToApply);
+                                
+                                // Mark when we received this background to avoid loops
+                                if (window.backgroundSync) {
+                                    window.backgroundSync.lastBackgroundReceiveTime = Date.now();
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error processing background command:', e);
+                }
+            });
+        }
+
         return () => {
             // Clean up event listeners
             try {
@@ -2242,6 +2430,7 @@ const BackgroundSelector = () => {
         type: string;
         name: string;
         thumbnail?: string;
+        dataUrl?: string; // Add dataUrl property for base64 stored images
     } => {
         // First check in built-in backgrounds
         const builtInBg = BACKGROUNDS.find(bg => bg.id === backgroundId);
@@ -2259,9 +2448,8 @@ const BackgroundSelector = () => {
         if (customBg) {
             return {
                 ...customBg,
-                thumbnail: customBg.type === 'image' 
-                    ? customBg.value.replace('url(', '').replace(')', '') 
-                    : undefined
+                // If the custom background has a dataUrl property, use it for thumbnail
+                thumbnail: customBg.dataUrl || customBg.value.replace('url(', '').replace(')', '')
             };
         }
         
@@ -2278,18 +2466,32 @@ const BackgroundSelector = () => {
         
         if (background) {
             // Apply to the entire page (html and body) for full-page background
-            if (background.type === 'image') {
-                document.documentElement.style.backgroundImage = background.value;
+                if (background.type === 'image') {
+                // For images, get the appropriate value to use
+                let backgroundValue;
+                
+                // If we have a dataUrl, use it directly with url()
+                if (background.dataUrl) {
+                    backgroundValue = `url(${background.dataUrl})`;
+                } 
+                // Otherwise use the value property which might already have url() or might need it
+                else {
+                    backgroundValue = background.value.startsWith('url(') 
+                        ? background.value 
+                        : `url(${background.value})`;
+                }
+                    
+                document.documentElement.style.backgroundImage = backgroundValue;
                 document.documentElement.style.backgroundSize = 'cover';
                 document.documentElement.style.backgroundPosition = 'center center';
                 document.documentElement.style.backgroundRepeat = 'no-repeat';
                 
-                document.body.style.backgroundImage = background.value;
+                document.body.style.backgroundImage = backgroundValue;
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center center';
                 document.body.style.backgroundRepeat = 'no-repeat';
-            } else {
-                // For colors and gradients
+                } else {
+                    // For colors and gradients
                 document.documentElement.style.background = background.value;
                 document.body.style.background = background.value;
             }
@@ -2840,6 +3042,11 @@ const BackgroundSelector = () => {
         if ((isAdmin || hasPermission) && conference && localParticipant) {
             // Send the background change to all participants
             try {
+                // Check if we're broadcasting a custom background and get its data
+                const customBgData = backgroundId.startsWith('custom-')
+                    ? customBackgrounds.find(bg => bg.id === backgroundId)
+                    : null;
+
                 // Create the message payload
                 const messageData = {
                     type: BACKGROUND_MESSAGE_TYPE,
@@ -2847,11 +3054,36 @@ const BackgroundSelector = () => {
                     backgroundId,
                     sender: localParticipant.id,
                     senderName: localParticipant.name || 'You',
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    customBackground: customBgData // Include full custom background data if applicable
                 };
                 
                 // Send the text message to the conference
-                conference.sendTextMessage(JSON.stringify(messageData));
+                // Try using either sendCommand or sendTextMessage based on what's available
+                try {
+                    if (typeof conference.sendCommand === 'function') {
+                        conference.sendCommand('background-change', {
+                            value: JSON.stringify(messageData)
+                        });
+                    } else {
+                        // Fallback to sendTextMessage if sendCommand is not available
+                        conference.sendTextMessage(JSON.stringify(messageData));
+                    }
+                } catch (err) {
+                    console.error('Error sending background message:', err);
+                    // Last resort fallback - try APP.conference
+                    try {
+                        // Use type assertion to bypass TypeScript error since we know this might be available at runtime
+                        const appConference = window.APP?.conference as any;
+                        if (appConference && typeof appConference.sendCommand === 'function') {
+                            appConference.sendCommand('background-change', {
+                                value: JSON.stringify(messageData)
+                            });
+                        }
+                    } catch (finalErr) {
+                        console.error('Final fallback also failed:', finalErr);
+                    }
+                }
                 
                 // Update shared state
                 setSharedBackground(backgroundId);
@@ -2897,7 +3129,31 @@ const BackgroundSelector = () => {
                 };
                 
                 // Send the text message to the conference
-                conference.sendTextMessage(JSON.stringify(messageData));
+                // Try using either sendCommand or sendTextMessage based on what's available
+                try {
+                    if (typeof conference.sendCommand === 'function') {
+                        conference.sendCommand('background-change', {
+                            value: JSON.stringify(messageData)
+                        });
+                    } else {
+                        // Fallback to sendTextMessage if sendCommand is not available
+                        conference.sendTextMessage(JSON.stringify(messageData));
+                    }
+                } catch (err) {
+                    console.error('Error sending background message:', err);
+                    // Last resort fallback - try APP.conference
+                    try {
+                        // Use type assertion to bypass TypeScript error since we know this might be available at runtime
+                        const appConference = window.APP?.conference as any;
+                        if (appConference && typeof appConference.sendCommand === 'function') {
+                            appConference.sendCommand('background-change', {
+                                value: JSON.stringify(messageData)
+                            });
+                        }
+                    } catch (finalErr) {
+                        console.error('Final fallback also failed:', finalErr);
+                    }
+                }
                 
                 // Update shared state
                 setSharedBackground(selectedBackground);
@@ -3150,6 +3406,7 @@ const BackgroundSelector = () => {
         setShowSettingsMenu(false);
     };
 
+    // Function to handle file upload for custom backgrounds
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) {
@@ -3168,27 +3425,53 @@ const BackgroundSelector = () => {
             return;
         }
 
+        // Show loading indicator
+        showBackgroundChangeIndicator(undefined, 'Uploading image...');
+
         const reader = new FileReader();
         reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
             if (dataUrl) {
                 // Create unique id for the custom background
                 const customId = `custom-${Date.now()}`;
-                const newCustomBg = {
+                
+                // Create the custom background object with dataUrl
+                const newCustomBg: CustomBackground = {
                     id: customId,
-                    value: `url(${dataUrl})`,
+                    value: `url(${dataUrl})`, // For CSS compatibility
                     type: 'image',
-                    name: file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name
+                    name: file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name,
+                    dataUrl: dataUrl // Store the raw dataUrl for sharing
                 };
                 
-                // Add to custom backgrounds and select it
-                setCustomBackgrounds([...customBackgrounds, newCustomBg]);
-                setSelectedBackground(customId);
+                // Update state with new background
+                const updatedBackgrounds = [...customBackgrounds, newCustomBg];
+                setCustomBackgrounds(updatedBackgrounds);
                 
-                // Reset the input to allow selecting the same file again
+                // Save to localStorage
+                try {
+                    localStorage.setItem('hereFmCustomBackgrounds', JSON.stringify(updatedBackgrounds));
+                } catch (e) {
+                    console.error('Error saving custom backgrounds to localStorage:', e);
+                }
+                
+                // Apply the background and handle broadcasting
+                handleBackgroundChange(customId);
+                
+                // Reset input
                 event.target.value = '';
+                
+                // Show success message
+                showBackgroundChangeIndicator(undefined, 'Background uploaded successfully');
             }
         };
+        
+        reader.onerror = () => {
+            console.error('Error reading file');
+            showBackgroundChangeIndicator(undefined, 'Error uploading image');
+            event.target.value = '';
+        };
+        
         reader.readAsDataURL(file);
     };
 
