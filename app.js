@@ -1,5 +1,10 @@
 /* Jitsi Meet app main entrypoint. */
 
+// Ensure APP is initialized early - before any imports might try to use it
+window.APP = window.APP || {};
+window.APP.API = window.APP.API || {};
+window.APP.conference = window.APP.conference || { roomName: '' };
+
 // Re-export jQuery
 // FIXME: Remove this requirement from torture tests.
 import $ from 'jquery';
@@ -54,6 +59,7 @@ if (window.Olm) {
     });
 }
 
+// Complete APP initialization with imported modules
 window.APP = {
     API,
     conference,

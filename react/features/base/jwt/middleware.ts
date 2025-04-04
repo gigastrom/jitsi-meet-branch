@@ -3,6 +3,7 @@ import jwtDecode from 'jwt-decode';
 import { AnyAction } from 'redux';
 
 import { IStore } from '../../app/types';
+import { setAuthToken } from '../../authentication/actions.any';
 import { isVpaasMeeting } from '../../jaas/functions';
 import { SET_CONFIG } from '../config/actionTypes';
 import { SET_LOCATION_URL } from '../connection/actionTypes';
@@ -11,6 +12,7 @@ import { getLocalParticipant } from '../participants/functions';
 import { IParticipant } from '../participants/types';
 import MiddlewareRegistry from '../redux/MiddlewareRegistry';
 import { parseURIString } from '../util/uri';
+import { setAndValidateToken } from '../../switch/actions';
 
 import { SET_JWT } from './actionTypes';
 import { setJWT } from './actions';
@@ -130,6 +132,9 @@ function _setJWT(store: IStore, next: Function, action: AnyAction) {
         const state = store.getState();
 
         if (jwt) {
+            // Store the JWT in auth token for persistence and validate with Switch API
+            store.dispatch(setAndValidateToken(jwt));
+            
             let jwtPayload;
 
             try {

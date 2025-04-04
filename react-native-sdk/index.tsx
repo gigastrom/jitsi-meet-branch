@@ -20,6 +20,7 @@ import { App } from './react/features/app/components/App.native';
 import { setAudioOnly } from './react/features/base/audio-only/actions';
 import { setAudioMuted, setVideoMuted } from './react/features/base/media/actions';
 import { getRoomsInfo } from './react/features/breakout-rooms/functions';
+import { updateSettings } from './react/features/base/settings/actions';
 
 
 interface IEventListeners {
@@ -41,6 +42,7 @@ interface IUserInfo {
     avatarURL: string;
     displayName: string;
     email: string;
+    userId?: string;
 }
 
 interface IAppProps {
@@ -51,6 +53,7 @@ interface IAppProps {
     serverURL?: string;
     style?: Object;
     token?: string;
+    authToken?: string;
     userInfo?: IUserInfo;
 }
 
@@ -59,6 +62,7 @@ export interface JitsiRefProps {
     setAudioOnly?: (value: boolean) => void;
     setAudioMuted?: (muted: boolean) => void;
     setVideoMuted?: (muted: boolean) => void;
+    setAuthToken?: (token: string) => void;
     getRoomsInfo?: () => IRoomsInfo;
 }
 
@@ -76,6 +80,7 @@ export const JitsiMeeting = forwardRef<JitsiRefProps, IAppProps>((props, ref) =>
         serverURL,
         style,
         token,
+        authToken,
         userInfo
     } = props;
 
@@ -100,6 +105,15 @@ export const JitsiMeeting = forwardRef<JitsiRefProps, IAppProps>((props, ref) =>
             const dispatch = app.current.state.store.dispatch;
 
             dispatch(setVideoMuted(muted));
+        },
+        setAuthToken: token => {
+            const dispatch = app.current.state.store.dispatch;
+            const { settings } = app.current.state.store.getState()['features/base'];
+            
+            // Update settings with the new auth token
+            dispatch(updateSettings({
+                authToken: token
+            }));
         },
         getRoomsInfo: () => {
             const state = app.current.state.store.getState();
@@ -147,9 +161,19 @@ export const JitsiMeeting = forwardRef<JitsiRefProps, IAppProps>((props, ref) =>
                     onReadyToClose: eventListeners?.onReadyToClose
                 },
                 'url': urlProps,
-                'userInfo': userInfo
+                'userInfo': userInfo,
+                'authToken': authToken
             });
-        }, []
+        }, [
+            config, 
+            eventListeners, 
+            flags, 
+            room, 
+            serverURL, 
+            token, 
+            authToken, 
+            userInfo
+        ]
     );
 
     // eslint-disable-next-line arrow-body-style

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Theme, adaptV4Theme, createTheme } from '@mui/material/styles';
+import { Theme, createTheme } from '@mui/material/styles';
 
 import { ITypography, IPalette as Palette1 } from '../ui/types';
 
@@ -29,7 +29,7 @@ interface ThemeProps {
  * @returns {Object}
  */
 export function createWebTheme({ font, colorMap, shape, spacing, typography, breakpoints }: ThemeProps) {
-    return createTheme(adaptV4Theme({
+    return createTheme({
         spacing,
         palette: createColorTokens(colorMap),
         shape,
@@ -38,8 +38,16 @@ export function createWebTheme({ font, colorMap, shape, spacing, typography, bre
             font,
             ...typography
         },
-        breakpoints
-    }));
+        breakpoints,
+        components: {
+            // Add any component overrides needed for v5 here
+            MuiButtonBase: {
+                defaultProps: {
+                    disableRipple: true
+                }
+            }
+        }
+    });
 }
 
 /**

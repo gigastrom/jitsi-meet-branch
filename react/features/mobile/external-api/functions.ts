@@ -42,6 +42,7 @@ export function participantToParticipantInfo(participant: IParticipant) {
         participantId: participant.id,
         displayName: participant.displayName,
         avatarUrl: participant.avatarURL,
-        role: participant.role
+        role: participant.role,
+        userId: participant.jwtId
     };
 }

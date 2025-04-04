@@ -15,6 +15,7 @@ import { SETTINGS_UPDATED } from './actionTypes';
  * @type Object
  */
 const DEFAULT_STATE: ISettingsState = {
+    authToken: undefined,
     audioOutputDeviceId: undefined,
     avatarURL: undefined,
     cameraDeviceId: undefined,
@@ -52,6 +53,7 @@ const DEFAULT_STATE: ISettingsState = {
 };
 
 export interface ISettingsState {
+    authToken?: string;
     audioOutputDeviceId?: string;
     audioSettingsVisible?: boolean;
     avatarURL?: string;
@@ -148,6 +150,7 @@ function _initSettings(featureState: ISettingsState) {
     // jibri, and remove the old settings.js values.
     const savedDisplayName = jitsiLocalStorage.getItem('displayname');
     const savedEmail = jitsiLocalStorage.getItem('email');
+    const savedAuthToken = jitsiLocalStorage.getItem('authToken');
 
     // The helper _.escape will convert null to an empty strings. The empty
     // string will be saved in settings. On app re-load, because an empty string
@@ -156,10 +159,12 @@ function _initSettings(featureState: ISettingsState) {
     // local storage.
     const displayName = savedDisplayName === null ? undefined : escape(savedDisplayName);
     const email = savedEmail === null ? undefined : escape(savedEmail);
+    const authToken = savedAuthToken === null ? undefined : savedAuthToken;
 
     settings = assignIfDefined({
         displayName,
-        email
+        email,
+        authToken
     }, settings);
 
     return settings;

@@ -66,6 +66,8 @@ import { muteLocal } from '../../video-menu/actions.native';
 import { ENTER_PICTURE_IN_PICTURE } from '../picture-in-picture/actionTypes';
 // @ts-ignore
 import { isExternalAPIAvailable } from '../react-native-sdk/functions';
+import { updateSettings } from '../../base/settings/actions';
+import { setAndValidateToken } from '../../switch/actions';
 
 import { READY_TO_CLOSE } from './actionTypes';
 import { setParticipantsWithScreenShare } from './actions';
@@ -340,6 +342,13 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
                 muted: action.muted
             });
         break;
+
+    case 'SET_AUTH_TOKEN_FROM_API': {
+        if (typeof action.token === 'string') {
+            store.dispatch(setAndValidateToken(action.token));
+        }
+        break;
+    }
     }
 
     return result;

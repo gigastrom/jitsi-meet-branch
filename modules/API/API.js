@@ -898,6 +898,12 @@ function initCommands() {
                 backgroundType: VIRTUAL_BACKGROUND_TYPE.IMAGE,
                 virtualSource: backgroundImage
             }, jitsiTrack));
+        },
+        'set-auth-token': token => {
+            APP.store.dispatch({
+                type: 'SET_AUTH_TOKEN_FROM_API',
+                token
+            });
         }
     };
     transport.on('event', ({ data, name }) => {
@@ -1433,7 +1439,10 @@ class API {
      * conference.
      *
      * @param {string} id - User id.
-     * @param {Object} props - The display name of the user.
+     * @param {Object} props - The display name and avatar URL of the user.
+     * @param {string} [props.displayName] - The display name of the user.
+     * @param {string} [props.formattedDisplayName] - The formatted display name of the user.
+     * @param {string} [props.userId] - The user's external ID (e.g., from Switch).
      * @returns {void}
      */
     notifyUserJoined(id, props) {
@@ -1654,7 +1663,12 @@ class API {
      * @param {string} roomName - The room name.
      * @param {string} id - The id of the local user.
      * @param {Object} props - The display name, the avatar URL of the local
-     * user and the type of the room.
+     * user, and other properties.
+     * @param {string} [props.displayName] - The display name of the local user.
+     * @param {string} [props.formattedDisplayName] - The formatted display name of the local user.
+     * @param {string} [props.avatarURL] - The avatar URL of the local user.
+     * @param {string} [props.email] - The email of the local user.
+     * @param {string} [props.userId] - The user's external ID (e.g., from Switch).
      * @returns {void}
      */
     notifyConferenceJoined(roomName, id, props) {

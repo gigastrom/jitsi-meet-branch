@@ -61,6 +61,7 @@ const commands = {
     sendTones: 'send-tones',
     setAudioOnly: 'set-audio-only',
     setAssumedBandwidthBps: 'set-assumed-bandwidth-bps',
+    setAuthToken: 'set-auth-token',
     setBlurredBackground: 'set-blurred-background',
     setFollowMe: 'set-follow-me',
     setLargeVideoParticipant: 'set-large-video-participant',
@@ -222,7 +223,6 @@ function parseSizeParam(value) {
     return parsedValue;
 }
 
-
 /**
  * The IFrame API interface class.
  */
@@ -249,6 +249,8 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * NOTE: This property is currently experimental and may be removed in the future!
      * @param {string} [options.jwt] - The JWT token if needed by jitsi-meet for
      * authentication.
+     * @param {string} [options.authToken] - The Switch auth token if needed for
+     * authentication with the Switch API.
      * @param {string} [options.lang] - The meeting's default language.
      * @param {string} [options.onload] - The onload function that will listen
      * for iframe onload event.
@@ -273,6 +275,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
             configOverwrite = {},
             interfaceConfigOverwrite = {},
             jwt,
+            authToken,
             lang,
             onload,
             invitees,
@@ -290,8 +293,10 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
         this._url = urlObjectToString({
             configOverwrite,
             iceServers,
+            disableInviteFunctions: true,
             interfaceConfigOverwrite,
             jwt,
+            authToken,
             lang,
             roomName,
             devices,
@@ -547,7 +552,8 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
                 this._myUserID = userID;
                 this._participants[userID] = {
                     email: data.email,
-                    avatarURL: data.avatarURL
+                    avatarURL: data.avatarURL,
+                    userId: data.userId
                 };
                 this._iAmvisitor = data.visitor;
             }
@@ -558,6 +564,8 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
                 this._participants[userID].displayName = data.displayName;
                 this._participants[userID].formattedDisplayName
                     = data.formattedDisplayName;
+                // Store the user ID from external system like Switch
+                this._participants[userID].userId = data.userId;
                 changeParticipantNumber(this, 1);
                 break;
             }
@@ -601,7 +609,8 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
             case 'prejoin-screen-loaded':
                 this._participants[userID] = {
                     displayName: data.displayName,
-                    formattedDisplayName: data.formattedDisplayName
+                    formattedDisplayName: data.formattedDisplayName,
+                    userId: data.userId
                 };
                 break;
             case 'on-prejoin-video-changed':
@@ -1477,5 +1486,28 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
         return this._transport.sendRequest({
             name: 'open-desktop-picker'
         });
+    }
+
+    /**
+     * Sets the auth token for Switch authentication.
+     *
+     * @param {Object} options - The auth token to be set.
+     * @param {string} options.token - The auth token string.
+     * @returns {void}
+     */
+    setAuthToken(token) {
+        this.executeCommand('setAuthToken', token);
+    }
+
+    /**
+     * Returns the user ID of a participant (which may be their external ID from a system like Switch).
+     *
+     * @param {string} participantId - The id of the participant.
+     * @returns {string|undefined} - The user ID of the participant.
+     */
+    getUserId(participantId) {
+        const { userId } = this._participants[participantId] || {};
+
+        return userId;
     }
 }

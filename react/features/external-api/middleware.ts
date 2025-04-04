@@ -30,8 +30,18 @@ import { appendSuffix } from '../display-name/functions';
 import { SUBMIT_FEEDBACK_ERROR, SUBMIT_FEEDBACK_SUCCESS } from '../feedback/actionTypes';
 import { SET_FILMSTRIP_VISIBLE } from '../filmstrip/actionTypes';
 import { iAmVisitor } from '../visitors/functions';
+import { setAuthToken } from '../authentication/actions.any';
 
 import './subscriber';
+
+/**
+ * Returns the absolute URL of the default avatar.
+ *
+ * @returns {string}
+ */
+function _getDefaultAvatarUrl() {
+    return new URL('images/avatar.png', getBaseUrl()).href;
+}
 
 /**
  * The middleware of the feature {@code external-api}.
@@ -105,7 +115,7 @@ MiddlewareRegistry.register(store => next => action => {
         const state = store.getState();
         const { defaultLocalDisplayName } = state['features/base/config'];
         const { room } = state['features/base/conference'];
-        const { loadableAvatarUrl, name, id, email } = getLocalParticipant(state) ?? {};
+        const { loadableAvatarUrl, name, id, email, jwtId } = getLocalParticipant(state) ?? {};
         const breakoutRoom = APP.conference.roomName.toString() !== room?.toLowerCase();
 
         // we use APP.conference.roomName as we do not update state['features/base/conference'].room when
@@ -122,7 +132,8 @@ MiddlewareRegistry.register(store => next => action => {
                 avatarURL: loadableAvatarUrl,
                 breakoutRoom,
                 email,
-                visitor: iAmVisitor(state)
+                visitor: iAmVisitor(state),
+                userId: jwtId
             }
         );
         break;
@@ -212,7 +223,7 @@ MiddlewareRegistry.register(store => next => action => {
         const state = store.getState();
         const { defaultRemoteDisplayName } = state['features/base/config'];
         const { participant } = action;
-        const { fakeParticipant, id, local, name } = participant;
+        const { fakeParticipant, id, local, name, jwtId } = participant;
 
         // The version of external api outside of middleware did not emit
         // the local participant being created.
@@ -225,7 +236,8 @@ MiddlewareRegistry.register(store => next => action => {
             APP.API.notifyUserJoined(id, {
                 displayName: name,
                 formattedDisplayName: appendSuffix(
-                    name || defaultRemoteDisplayName)
+                    name || defaultRemoteDisplayName),
+                userId: jwtId
             });
         }
 
@@ -264,15 +276,6 @@ MiddlewareRegistry.register(store => next => action => {
         APP.API.notifyFeedbackSubmitted();
         break;
     }
-
     return result;
 });
 
-/**
- * Returns the absolute URL of the default avatar.
- *
- * @returns {string}
- */
-function _getDefaultAvatarUrl() {
-    return new URL('images/avatar.png', getBaseUrl()).href;
-}

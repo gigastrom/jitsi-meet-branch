@@ -1,6 +1,13 @@
 <html itemscope itemtype="http://schema.org/Product" prefix="og: http://ogp.me/ns#" xmlns="http://www.w3.org/1999/html">
 
 <head>
+    <!-- Initialize APP global object early to prevent "Cannot set properties of undefined" errors -->
+    <script>
+        window.APP = window.APP || {};
+        window.APP.API = window.APP.API || {};
+        window.APP.conference = window.APP.conference || { roomName: '' };
+    </script>
+    
     <!--#include virtual="head.html" -->
     <meta charset="utf-8">
     <meta http-equiv="content-type" content="text/html;charset=utf-8">

@@ -2,6 +2,8 @@ import { IStore } from '../app/types';
 import { checkIfCanJoin } from '../base/conference/actions';
 import { IJitsiConference } from '../base/conference/reducer';
 import { hideDialog, openDialog } from '../base/dialog/actions';
+import { updateSettings } from '../base/settings/actions';
+import { jitsiLocalStorage } from '@jitsi/js-utils';
 
 import {
     LOGIN,
@@ -13,6 +15,28 @@ import {
 } from './actionTypes';
 import { LoginDialog, WaitForOwnerDialog } from './components';
 import logger from './logger';
+
+/**
+ * Sets the auth token in both redux state and localStorage for persistence.
+ *
+ * @param {string} authToken - The auth token to be saved.
+ * @returns {Function}
+ */
+export function setAuthToken(authToken: string) {
+    return (dispatch: IStore['dispatch']) => {
+        // Save to localStorage for persistence
+        if (authToken) {
+            jitsiLocalStorage.setItem('authToken', authToken);
+        } else {
+            jitsiLocalStorage.removeItem('authToken');
+        }
+
+        // Update the settings in redux
+        dispatch(updateSettings({
+            authToken
+        }));
+    };
+}
 
 /**
  * Initiates authenticating and upgrading the role of the local participant to
@@ -160,8 +184,13 @@ export function login() {
 * }}
 */
 export function logout() {
-    return {
-        type: LOGOUT
+    return (dispatch: IStore['dispatch']) => {
+        // Clear the auth token
+        dispatch(setAuthToken(''));
+        
+        dispatch({
+            type: LOGOUT
+        });
     };
 }
 

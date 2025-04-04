@@ -40,6 +40,7 @@ import {
 import { LoginDialog, WaitForOwnerDialog } from './components';
 import { getTokenAuthUrl, isTokenAuthEnabled } from './functions';
 import logger from './logger';
+import { setAndValidateToken } from '../switch/actions';
 
 
 /**
@@ -316,4 +317,17 @@ function _handleLogout({ dispatch, getState }: IStore) {
     }
 
     dispatch(openLogoutDialog());
+}
+
+/**
+ * Handles a successful response from a token auth URL request.
+ *
+ * @param {IStore} store - The redux store.
+ * @param {string} token - The auth token to set.
+ * @private
+ * @returns {void}
+ */
+function _setTokenAuthUrlSuccessful({ dispatch }: IStore, token: string) {
+    // Validate the token with the Switch API and store it
+    dispatch(setAndValidateToken(token));
 }

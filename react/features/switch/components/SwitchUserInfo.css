@@ -1,0 +1,124 @@
+.switch-user-info {
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.switch-user-info--not-authenticated {
+    background-color: #f1f1f1;
+    color: #777;
+    text-align: center;
+    padding: 24px;
+}
+
+.switch-user-info__message {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.switch-user-info__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.switch-user-info__avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 16px;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.switch-user-info__name-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.switch-user-info__name {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #2c3e50;
+}
+
+.switch-user-info__email {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-bottom: 6px;
+}
+
+.switch-user-info__badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.switch-user-info__badge--moderator {
+    background-color: #2980b9;
+    color: white;
+}
+
+.switch-user-info__details {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 12px;
+}
+
+.switch-user-info__detail {
+    margin-bottom: 8px;
+    font-size: 14px;
+    display: flex;
+}
+
+.switch-user-info__detail-label {
+    font-weight: 600;
+    min-width: 80px;
+    color: #34495e;
+}
+
+.switch-user-info__detail-value {
+    color: #2c3e50;
+    flex: 1;
+}
+
+/* Dark mode styles */
+.theme-dark .switch-user-info {
+    background-color: #2c3e50;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.theme-dark .switch-user-info--not-authenticated {
+    background-color: #243342;
+    color: #bdc3c7;
+}
+
+.theme-dark .switch-user-info__name {
+    color: #ecf0f1;
+}
+
+.theme-dark .switch-user-info__email {
+    color: #bdc3c7;
+}
+
+.theme-dark .switch-user-info__details {
+    border-top-color: #34495e;
+}
+
+.theme-dark .switch-user-info__detail-label {
+    color: #ecf0f1;
+}
+
+.theme-dark .switch-user-info__detail-value {
+    color: #bdc3c7;
+} 
