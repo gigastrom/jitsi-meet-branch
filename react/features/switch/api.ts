@@ -127,7 +127,7 @@ export async function validateAuthToken(authToken: string): Promise<IUserProfile
         
         return processedData;
     } catch (error) {
-        logger.error('Error validating auth token:', error);
+        console.error('Error validating auth token:', error);
         throw error;
     }
 }
@@ -175,7 +175,7 @@ export function getCurrentUserProfile(): IUserProfile | null {
         const userData = jitsiLocalStorage.getItem('switchUserData');
         return userData ? JSON.parse(userData) : null;
     } catch (error) {
-        logger.error('Error getting current user profile:', error);
+        console.error('Error getting current user profile:', error);
         return null;
     }
 }

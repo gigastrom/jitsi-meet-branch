@@ -8,6 +8,15 @@
             }
         }
 
+        /* Override hide-videos to ensure videos are always visible */
+        &.hide-videos {
+            .remote-videos {
+                & > div {
+                    opacity: 1 !important; /* Force videos to be visible */
+                }
+            }
+        }
+
         /*
          * Firefox sets flex items to min-height: auto and min-width: auto,
          * preventing flex children from shrinking like they do on other browsers.

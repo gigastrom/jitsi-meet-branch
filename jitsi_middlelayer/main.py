@@ -5,7 +5,7 @@ Empty FastAPI template for Jitsi Switch integration
 import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Union
-from fastapi import FastAPI, Header, HTTPException, Security, Depends
+from fastapi import FastAPI, Header, HTTPException, Security, Depends, File, UploadFile
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -17,6 +17,8 @@ from passlib.context import CryptContext
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from modules.azure_connect import upload_file
+import tempfile
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -61,6 +63,51 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "API template is running"}
+
+
+@app.post("/upload/stream")
+async def upload_stream_file(
+    file: UploadFile = File(...),
+    current_user: TokenPayload = Depends(get_current_user_from_token)
+):
+    """
+    Upload a stream file to Azure and get back the URL
+    
+    Args:
+        file: The file to upload
+        current_user: Authenticated user from token
+    
+    Returns:
+        dict: Contains the URL of the uploaded file
+    """
+    try:
+        # Create a temporary file to store the upload
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            # Write the file content
+            content = await file.read()
+            temp_file.write(content)
+            temp_file_path = temp_file.name
+
+        try:
+            # Upload to Azure using the existing function
+            url = await upload_file(temp_file_path)
+            
+            return {
+                "success": True,
+                "url": url,
+                "filename": file.filename,
+                "content_type": file.content_type
+            }
+            
+        finally:
+            # Clean up the temporary file
+            os.unlink(temp_file_path)
+            
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to upload file: {str(e)}"
+        )
 
 # Run server
 if __name__ == "__main__":

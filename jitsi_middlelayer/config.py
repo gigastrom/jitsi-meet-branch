@@ -6,3 +6,5 @@ DB_POOL_SIZE = config("DB_POOL_SIZE", cast=int, default=5)
 DB_MAX_OVERFLOW = config("DB_MAX_OVERFLOW", cast=int, default=10)
 DB_POOL_RECYCLE = config("DB_POOL_RECYCLE", cast=int, default=1800)
 
+
+AZURE_CONNECTION_URL= config("AZURE_CONNECTION_URL", default="")

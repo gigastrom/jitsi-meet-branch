@@ -390,6 +390,7 @@ class Filmstrip extends PureComponent <IProps, IState> {
             && _currentLayout !== LAYOUTS.TILE_VIEW
             && ((filmstripType === FILMSTRIP_TYPE.MAIN && !_filmstripDisabled)
                 || (filmstripType === FILMSTRIP_TYPE.STAGE && _topPanelFilmstrip))) {
+            // @ts-ignore
             toolbar = this._renderToggleButton();
         }
 
@@ -908,7 +909,7 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         isVisible = _topPanelVisible;
     }
     const videosClassName = `filmstrip__videos${isVisible ? '' : ' hidden'}${_hasScroll ? ' has-scroll' : ''}`;
-    const className = `${remoteVideosVisible || ownProps._verticalViewGrid ? '' : 'hide-videos'} ${
+    const className = `${
         shouldReduceHeight ? 'reduce-height' : ''
     } ${shiftRight ? 'shift-right' : ''} ${collapseTileView ? 'collapse' : ''} ${isVisible ? '' : 'hidden'}`.trim();
 

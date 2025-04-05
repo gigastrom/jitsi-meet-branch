@@ -5,3 +5,5 @@ python-jose==3.3.0
 python-multipart==0.0.6
 passlib==1.7.4
 faker==18.13.0
+sqlalchemy==2.0.30
+python-decouple==3.8

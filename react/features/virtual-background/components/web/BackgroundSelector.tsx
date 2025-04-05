@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { makeStyles } from 'tss-react/mui';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -1415,7 +1415,58 @@ const useStyles = makeStyles()(() => {
             '&:focus': {
                 borderBottom: '1px solid white',
             }
-        }
+        },
+        videoContainer: {
+            position: 'relative',
+            width: '100%',
+            height: '100vh',
+            display: 'block',
+            backgroundColor: 'transparent',
+            '& video': {
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+            }
+        },
+        
+        largeVideoWrapper: {
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden'
+        },
+        
+        largeVideo: {
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transform: 'scaleX(-1)',
+            zIndex: 1
+        },
+        templateIndicator: {
+            position: 'absolute',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            background: '#ff5722',
+            color: 'white',
+            fontSize: '12px',
+            textAlign: 'center',
+            lineHeight: '20px',
+            fontWeight: 'bold',
+            border: '2px solid white',
+            zIndex: 1000
+        },
+        templateIndicators: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: '5px',
+        },
     };
 });
 
@@ -1521,36 +1572,17 @@ interface IBackground {
     dataUrl?: string; // Add dataUrl for base64 images
 }
 
-// Update findBackgroundById to return the proper type with dataUrl
-const findBackgroundById = (backgroundId: string): IBackground => {
-    // First check in built-in backgrounds
-    const builtInBg = BACKGROUNDS.find(bg => bg.id === backgroundId);
-    if (builtInBg) {
-        return {
-            ...builtInBg,
-            thumbnail: builtInBg.type === 'image' 
-                ? builtInBg.value.replace('url(', '').replace(')', '') 
-                : undefined
-        };
-    }
-    
-    // Then check in custom backgrounds
-    const customBg = customBackgrounds.find(bg => bg.id === backgroundId);
-    if (customBg) {
-        // For custom backgrounds with dataUrl property (for base64 images)
-        return {
-            ...customBg,
-            // If the custom background has a dataUrl property, use it for thumbnail
-            thumbnail: customBg.dataUrl || customBg.value.replace('url(', '').replace(')', '')
-        };
-    }
-    
-    // Default fallback
-    return {
-        ...BACKGROUNDS[0],
-        thumbnail: undefined
-    };
-};
+// First, we need to define a proper interface for stickers in the BackgroundSelector.tsx
+// This should be added near the other interfaces like CustomBackground and IBackground
+
+interface Sticker {
+    id: string;
+    type: 'emoji' | 'image' | 'sticker' | 'gif'; // Restrict the type options
+    content: string;
+    position: { x: number; y: number }; // As percentages of container
+    dimensions: { width: number; height: number }; // Actual pixel dimensions
+    rotation: number;
+}
 
 /**
  * Component for selecting the background color or gradient in a here.fm style UI.
@@ -1561,20 +1593,26 @@ const BackgroundSelector = () => {
     const { classes, cx } = useStyles();
     const dispatch = useDispatch();
     const [selectedBackground, setSelectedBackground] = useState('default');
+    const [customBackgrounds, setCustomBackgrounds] = useState<Array<{
+        id: string;
+        value: string;
+        type: string;
+        name: string;
+        dataUrl?: string;
+    }>>([]);
     const [showOptions, setShowOptions] = useState(false);
-    const [customBackgrounds, setCustomBackgrounds] = useState<CustomBackground[]>([]);
     const [showThemeSelector, setShowThemeSelector] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState('default');
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+    const [completedDrawings, setCompletedDrawings] = useState<Array<{
+        points: Array<{x: number, y: number}>;
+        color: string;
+        lineWidth: number;
+        tool: 'pencil' | 'eraser';
+    }>>([]);
     
     // Add stickers state
-    const [stickers, setStickers] = useState<Array<{
-        type: 'emoji' | 'image';
-        content: string;
-        position: { x: number; y: number };
-        size: number;
-        rotation: number;
-    }>>([]);
+    const [stickers, setStickers] = useState<Sticker[]>([]);
     
     // Add chat visibility state
     // Replace the showChat state with isChatCollapsed
@@ -3634,6 +3672,14 @@ const BackgroundSelector = () => {
                         tool: drawingTool as 'pencil' | 'eraser'
                     }
                 );
+                
+                // Save the completed drawing for templates
+                setCompletedDrawings(prev => [...prev, {
+                    points: [...currentStrokePoints],
+                    color: drawingColor,
+                    lineWidth: lineWidth,
+                    tool: drawingTool as 'pencil' | 'eraser'
+                }]);
             }
             
             // Reset stroke points
@@ -3644,6 +3690,9 @@ const BackgroundSelector = () => {
     const clearCanvas = () => {
         if (contextRef.current && canvasRef.current) {
             contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+            
+            // Clear stored drawings
+            setCompletedDrawings([]);
             
             // Broadcast canvas clear to other participants
             if ((isAdmin || hasPermission) && conference && localParticipant) {
@@ -4469,12 +4518,19 @@ const BackgroundSelector = () => {
         id: string;
         name: string;
         backgroundId: string;
-        stickers: Array<{
-            type: 'emoji' | 'image';
-            content: string;
-            position: { x: number; y: number };
-            size: number;
-            rotation: number;
+        stickers: Sticker[]; // Use Sticker type consistently
+        drawings?: Array<{
+            points: Array<{x: number, y: number}>;
+            color: string;
+            lineWidth: number;
+            tool: 'pencil' | 'eraser';
+        }>;
+        texts?: Array<{
+            id: string;
+            text: string;
+            position: {x: number, y: number};
+            color: string;
+            fontSize: number;
         }>;
         createdAt: number;
     }
@@ -4484,73 +4540,511 @@ const BackgroundSelector = () => {
     const [showTemplates, setShowTemplates] = useState(false);
     const [templateName, setTemplateName] = useState('');
 
-    // Add new functions for template management
+    // Use a debounced update to reduce rendering frequency
+    const handleTemplateNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Use the native event value directly for immediate UI updates
+      const newValue = e.target.value;
+      
+      // Use functional state update to avoid closure issues
+      setTemplateName(newValue);
+    };
+
+    // First, let's define the StickerData interface that was missing
+    interface StickerData {
+        id: string;
+        type: string;
+        content: string;
+        position: { 
+            left: string; 
+            top: string; 
+        };
+        style: {
+            transform: string;
+            fontSize?: string; 
+            width?: string; 
+        };
+    }
+
+    // Update the Sticker interface (keep only one definition)
+    interface Sticker {
+        id: string;
+        type: 'emoji' | 'image' | 'sticker' | 'gif'; // Restrict the type options
+        content: string;
+        position: { x: number; y: number }; // As percentages of container
+        dimensions: { width: number; height: number }; // Actual pixel dimensions
+        rotation: number;
+    }
+
+    // Keep only one Template interface definition and remove any duplicates
+    interface Template {
+        id: string;
+        name: string;
+        backgroundId: string;
+        stickers: Sticker[]; // Use Sticker type consistently
+        drawings?: Array<{
+            points: Array<{x: number, y: number}>;
+            color: string;
+            lineWidth: number;
+            tool: 'pencil' | 'eraser';
+        }>;
+        texts?: Array<{
+            id: string;
+            text: string;
+            position: {x: number, y: number};
+            color: string;
+            fontSize: number;
+        }>;
+        createdAt: number;
+    }
+
+    // Add the conversion functions (only once)
+    const convertToStickerData = (sticker: Sticker): StickerData => {
+        return {
+            id: sticker.id,
+            type: sticker.type,
+            content: sticker.content,
+            position: {
+                left: `${sticker.position.x}%`,
+                top: `${sticker.position.y}%`
+            },
+            style: {
+                transform: sticker.rotation ? `rotate(${sticker.rotation}deg)` : '',
+                fontSize: sticker.type === 'emoji' ? `${sticker.dimensions.height}px` : undefined,
+                width: sticker.type !== 'emoji' ? `${sticker.dimensions.width}px` : undefined
+            }
+        };
+    };
+
+    const convertToSticker = (data: StickerData): Sticker => {
+        // Extract x and y from the position
+        const x = parseFloat(data.position.left) || 50;
+        const y = parseFloat(data.position.top) || 50;
+        
+        // Extract rotation from transform
+        const transformMatch = data.style.transform?.match(/rotate\(([^)]+)deg\)/);
+        const rotation = transformMatch ? parseFloat(transformMatch[1]) : 0;
+        
+        // Extract size from fontSize or width
+        let width = 120;
+        let height = 120;
+        
+        if (data.type === 'emoji' && data.style.fontSize) {
+            height = parseFloat(data.style.fontSize);
+            width = height; // For emoji, width and height are typically equal
+        } else if (data.style.width) {
+            width = parseFloat(data.style.width);
+            height = width; // Default to square if height not specified
+        }
+        
+        return {
+            id: data.id,
+            type: data.type as 'emoji' | 'image' | 'sticker' | 'gif',
+            content: data.content,
+            position: { x, y },
+            dimensions: { width, height },
+            rotation
+        };
+    };
+
+    // Keep ONE definition of captureExactStickerData
+    const captureExactStickerData = (): Sticker[] => {
+        const stickers = document.querySelectorAll('.sticker-item.on-screen');
+        const capturedStickers: Sticker[] = [];
+        
+        stickers.forEach(stickerElement => {
+            const id = stickerElement.id;
+            const stickerRect = stickerElement.getBoundingClientRect();
+            
+            // Get position as percentages of container
+            const containerElement = stickerElement.parentElement;
+            if (!containerElement) return;
+            
+            const containerRect = containerElement.getBoundingClientRect();
+            
+            // Calculate position as percentage of container
+            const left = parseFloat((stickerElement as HTMLElement).style.left) || 
+                        ((stickerRect.left - containerRect.left) / containerRect.width * 100);
+            const top = parseFloat((stickerElement as HTMLElement).style.top) || 
+                   ((stickerRect.top - containerRect.top) / containerRect.height * 100);
+            
+            // Determine content, type and actual dimensions
+            let content = '';
+            let type: 'emoji' | 'image' | 'sticker' | 'gif' = 'sticker';
+            let width = 120; // Default width
+            let height = 120; // Default height
+            
+            const contentElement = stickerElement.firstElementChild;
+            if (contentElement) {
+                if (contentElement.tagName === 'SPAN') {
+                    // Emoji
+                    content = contentElement.textContent || '';
+                    type = 'emoji';
+                    // Get computed style for actual dimensions
+                    const contentRect = contentElement.getBoundingClientRect();
+                    width = contentRect.width;
+                    height = contentRect.height;
+                    console.log(`Captured emoji with dimensions: ${width}px x ${height}px`);
+                } else if (contentElement.tagName === 'IMG') {
+                    // Image or GIF
+                    const imgElement = contentElement as HTMLImageElement;
+                    content = imgElement.src;
+                    type = imgElement.src.includes('.gif') ? 'gif' : 'image';
+                    // Get actual rendered dimensions
+                    const contentRect = contentElement.getBoundingClientRect();
+                    width = contentRect.width;
+                    height = contentRect.height;
+                    console.log(`Captured ${type} with dimensions: ${width}px x ${height}px`);
+                }
+            }
+            
+            // Extract rotation from transform style if present
+            let rotation = 0;
+            const transform = (stickerElement as HTMLElement).style.transform;
+            if (transform) {
+                const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
+                if (rotateMatch && rotateMatch[1]) {
+                    rotation = parseFloat(rotateMatch[1]);
+                }
+            }
+            
+            // Ensure we have valid dimensions (never too small)
+            const minSize = type === 'emoji' ? 40 : 120;
+            if (width < minSize) width = minSize;
+            if (height < minSize) height = minSize;
+            
+            capturedStickers.push({
+                id,
+                type,
+                content,
+                position: { x: left, y: top },
+                dimensions: { width, height },
+                rotation
+            });
+        });
+        
+        return capturedStickers;
+    };
+
+    // Keep ONE definition of addStickerFromTemplateData
+    const addStickerFromTemplateData = (sticker: Sticker) => {
+        try {
+            // Find the background container
+            const backgroundContainer = document.querySelector(
+                '#largeVideoContainer, #filmstripRemoteVideosContainer, .videocontainer, .filmstrip, #videospace'
+            );
+            
+            if (!backgroundContainer) {
+                console.error('Could not find background container');
+                return;
+            }
+            
+            // Make sure the container has relative or absolute positioning
+            const containerStyles = window.getComputedStyle(backgroundContainer);
+            if (containerStyles.position === 'static') {
+                (backgroundContainer as HTMLElement).style.position = 'relative';
+            }
+            
+            // Create sticker element
+            const stickerElement = document.createElement('div');
+            stickerElement.className = 'sticker-item on-screen';
+            stickerElement.id = sticker.id;
+            
+            // Set styles with position as percentages
+            stickerElement.style.position = 'absolute';
+            stickerElement.style.zIndex = '9999';
+            stickerElement.style.left = `${sticker.position.x}%`;
+            stickerElement.style.top = `${sticker.position.y}%`;
+            stickerElement.style.padding = '5px';
+            stickerElement.style.borderRadius = '4px';
+            stickerElement.style.cursor = 'move';
+            stickerElement.style.userSelect = 'none';
+            
+            // Apply rotation if available
+            if (sticker.rotation) {
+                stickerElement.style.transform = `rotate(${sticker.rotation}deg)`;
+            }
+            
+            // Create content element (emoji or image)
+            let contentElement: HTMLSpanElement | HTMLImageElement;
+            
+            if (sticker.type === 'emoji') {
+                // Emoji as span with text
+                contentElement = document.createElement('span');
+                contentElement.textContent = sticker.content;
+                // Apply the exact dimensions
+                contentElement.style.fontSize = `${sticker.dimensions.height}px`; // Use height for font size
+                contentElement.style.width = `${sticker.dimensions.width}px`;
+                contentElement.style.height = `${sticker.dimensions.height}px`;
+                contentElement.style.display = 'flex';
+                contentElement.style.alignItems = 'center';
+                contentElement.style.justifyContent = 'center';
+                console.log(`Restored emoji with dimensions: ${sticker.dimensions.width}px x ${sticker.dimensions.height}px`);
+            } else {
+                // Image/GIF as img element
+                const imgElement = document.createElement('img');
+                imgElement.src = sticker.content;
+                imgElement.alt = 'Sticker';
+                // Apply the exact dimensions
+                imgElement.style.width = `${sticker.dimensions.width}px`;
+                imgElement.style.height = `${sticker.dimensions.height}px`;
+                imgElement.style.objectFit = 'contain';
+                imgElement.style.borderRadius = '4px';
+                contentElement = imgElement;
+                console.log(`Restored ${sticker.type} with dimensions: ${sticker.dimensions.width}px x ${sticker.dimensions.height}px`);
+            }
+            
+            stickerElement.appendChild(contentElement);
+            
+            // Add delete button
+            const deleteBtn = document.createElement('div');
+            deleteBtn.className = 'sticker-delete';
+            deleteBtn.textContent = '×';
+            deleteBtn.style.position = 'absolute';
+            deleteBtn.style.top = '-8px';
+            deleteBtn.style.right = '-8px';
+            deleteBtn.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+            deleteBtn.style.color = 'white';
+            deleteBtn.style.borderRadius = '50%';
+            deleteBtn.style.width = '20px';
+            deleteBtn.style.height = '20px';
+            deleteBtn.style.lineHeight = '18px';
+            deleteBtn.style.textAlign = 'center';
+            deleteBtn.style.fontSize = '16px';
+            deleteBtn.style.cursor = 'pointer';
+            deleteBtn.style.display = 'none';
+            deleteBtn.style.zIndex = '10000';
+            
+            stickerElement.appendChild(deleteBtn);
+            
+            // Show delete button on hover
+            stickerElement.addEventListener('mouseenter', () => {
+                deleteBtn.style.display = 'block';
+            });
+            
+            stickerElement.addEventListener('mouseleave', () => {
+                deleteBtn.style.display = 'none';
+            });
+            
+            // Handle deletion
+            deleteBtn.addEventListener('click', () => {
+                stickerElement.remove();
+            });
+            
+            // Make sticker draggable
+            let isDragging = false;
+            let offsetX = 0, offsetY = 0;
+            
+            stickerElement.addEventListener('mousedown', (e) => {
+                // Don't start drag if clicking the delete button
+                if (e.target === deleteBtn) {
+                    return;
+                }
+                
+                isDragging = true;
+                const rect = stickerElement.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                e.preventDefault();
+                stickerElement.style.zIndex = '10001'; // Bring to front when dragging
+            });
+            
+            const handleMouseMove = (e: MouseEvent) => {
+                if (isDragging) {
+                    // Calculate position relative to the background container
+                    const containerRect = backgroundContainer.getBoundingClientRect();
+                    
+                    // Calculate the position within the container
+                    const newLeft = e.clientX - containerRect.left - offsetX;
+                    const newTop = e.clientY - containerRect.top - offsetY;
+                    
+                    // Convert to percentages for responsive positioning
+                    const leftPercent = (newLeft / containerRect.width) * 100;
+                    const topPercent = (newTop / containerRect.height) * 100;
+                    
+                    // Ensure sticker stays within bounds
+                    const maxXPercent = 95;
+                    const maxYPercent = 95;
+                    
+                    const boundedLeftPercent = Math.max(0, Math.min(leftPercent, maxXPercent));
+                    const boundedTopPercent = Math.max(0, Math.min(topPercent, maxYPercent));
+                    
+                    stickerElement.style.left = `${boundedLeftPercent}%`;
+                    stickerElement.style.top = `${boundedTopPercent}%`;
+                }
+            };
+            
+            const handleMouseUp = () => {
+                if (isDragging) {
+                    isDragging = false;
+                    stickerElement.style.zIndex = '9999'; // Reset z-index after drag
+                }
+            };
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            // Add cleanup when removed
+            stickerElement.addEventListener('remove', () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            });
+            
+            // Add to background container
+            backgroundContainer.appendChild(stickerElement);
+            
+        } catch (error) {
+            console.error('Error adding sticker from template:', error);
+        }
+    };
+
+    // Keep ONE definition of saveAsTemplate
     const saveAsTemplate = () => {
         if (!templateName.trim()) return;
         
-        // Use selectedBackground instead of currentBackground
-        // and check if stickers is defined before using it
+        // Get drawings
+        let allDrawings = [...completedDrawings];
+        if (isDrawing && currentStrokePoints.length > 0) {
+            allDrawings.push({
+                points: [...currentStrokePoints],
+                color: drawingColor,
+                lineWidth: lineWidth,
+                tool: drawingTool as 'pencil' | 'eraser'
+            });
+        }
+        
+        // Capture stickers as they appear
+        const capturedStickers = captureExactStickerData();
+        
+        // Create template
         const newTemplate: Template = {
             id: Date.now().toString(),
             name: templateName.trim(),
-            backgroundId: selectedBackground || 'default', // Use selectedBackground state variable
-            stickers: Array.isArray(stickers) ? stickers.map(sticker => ({
-                type: sticker.type,
-                content: sticker.content,
-                position: sticker.position,
-                size: sticker.size,
-                rotation: sticker.rotation
-            })) : [], // Add a check if stickers exists
+            backgroundId: selectedBackground || 'default',
+            stickers: capturedStickers,
+            texts: texts.map(text => ({
+                id: text.id,
+                text: text.text,
+                position: {...text.position},
+                color: text.color,
+                fontSize: text.fontSize
+            })),
+            drawings: allDrawings,
             createdAt: Date.now()
         };
 
+        console.log('Saving template with stickers:', capturedStickers);
+        
+        // Update state and localStorage
         setTemplates(prev => [...prev, newTemplate]);
         setTemplateName('');
-        setShowTemplates(false);
         
         // Save to localStorage
         const savedTemplates = JSON.parse(localStorage.getItem('backgroundTemplates') || '[]');
         localStorage.setItem('backgroundTemplates', JSON.stringify([...savedTemplates, newTemplate]));
+        
+        // Show success message
+        // ...
     };
 
+    // Keep ONE definition of loadTemplate
     const loadTemplate = (template: Template) => {
+        console.log('Loading template:', template);
+        
         // Apply background
         handleBackgroundChange(template.backgroundId);
         
-        // Clear existing stickers
-        setStickers([]);
+        // Remove existing stickers
+        const existingStickers = document.querySelectorAll('.sticker-item.on-screen');
+        existingStickers.forEach(sticker => sticker.remove());
         
-        // Add template stickers safely
-        if (Array.isArray(template.stickers)) {
+        // Clear texts
+        setTexts([]);
+        
+        // Add stickers from template
+        if (Array.isArray(template.stickers) && template.stickers.length > 0) {
             template.stickers.forEach(sticker => {
-                addSticker(
-                    sticker.type, 
-                    sticker.content, 
-                    sticker.position, 
-                    sticker.size, 
-                    sticker.rotation
-                );
+                addStickerFromTemplateData(sticker);
             });
+        }
+        
+        // Add texts
+        if (Array.isArray(template.texts)) {
+            setTexts(template.texts.map(text => ({
+                id: text.id,
+                text: text.text,
+                position: {...text.position},
+                color: text.color,
+                fontSize: text.fontSize
+            })));
+        }
+        
+        // Restore drawings
+        if (Array.isArray(template.drawings) && canvasRef.current && contextRef.current) {
+            // Clear canvas first
+            const canvas = canvasRef.current;
+            const ctx = contextRef.current;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set completedDrawings state
+            setCompletedDrawings(template.drawings);
+            
+            // Actually redraw each drawing on the canvas
+            template.drawings.forEach(drawing => {
+                const { points, color, lineWidth, tool } = drawing;
+                
+                if (points.length === 0) return;
+                
+                // Configure drawing context
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                
+                // Set composite operation based on tool
+                ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+                
+                // Draw the stroke
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                
+                ctx.stroke();
+            });
+            
+            // Reset composite operation
+            ctx.globalCompositeOperation = 'source-over';
         }
         
         setShowTemplates(false);
     };
 
-    const deleteTemplate = (templateId: string) => {
-        setTemplates(prev => prev.filter(t => t.id !== templateId));
+    // Keep ONE definition of addSticker, updating it to use dimensions
+    const addSticker = (
+        type: 'emoji' | 'image',
+        content: string,
+        position: { x: number; y: number },
+        size: number,
+        rotation: number
+    ) => {
+        // Create a unique ID
+        const id = `sticker-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         
-        // Update localStorage
-        const savedTemplates = JSON.parse(localStorage.getItem('backgroundTemplates') || '[]');
-        localStorage.setItem('backgroundTemplates', JSON.stringify(savedTemplates.filter((t: Template) => t.id !== templateId)));
+        // For the initial creation, we'll convert size to both width and height
+        // Later when we capture from DOM, we'll get actual dimensions
+        const minSize = type === 'emoji' ? 40 : 120;
+        const adjustedSize = size < minSize ? minSize : size;
+        
+        // Add to stickers state with explicit typing
+        setStickers(prev => [...prev, {
+            id,
+            type,
+            content,
+            position: position || { x: 50, y: 50 }, // Default to center if not provided
+            dimensions: { width: adjustedSize, height: adjustedSize },
+            rotation: rotation || 0
+        } as Sticker]);
     };
-
-    // Add useEffect to load templates from localStorage
-    useEffect(() => {
-        const savedTemplates = localStorage.getItem('backgroundTemplates');
-        if (savedTemplates) {
-            setTemplates(JSON.parse(savedTemplates));
-        }
-    }, []);
 
     // Add template icon component
     const TemplateIcon = () => (
@@ -4571,7 +5065,9 @@ const BackgroundSelector = () => {
     </button>
 
     // Add template panel component
-    {showTemplates && (
+    const TemplatesData = () => {
+        if (showTemplates) {
+            return (
         <div className={classes.templatePanel}>
             <div className={classes.templateHeader}>
                 <h3>Templates</h3>
@@ -4586,6 +5082,7 @@ const BackgroundSelector = () => {
                                 src={findBackgroundById(template.backgroundId)?.thumbnail ?? ''}
                                 alt={template.name}
                             />
+                                    {/* No indicators */}
                         </div>
                         <div className={classes.templateInfo}>
                             <span>{template.name}</span>
@@ -4608,37 +5105,113 @@ const BackgroundSelector = () => {
                 <button onClick={saveAsTemplate}>Save Current as Template</button>
             </div>
         </div>
-    )}
+            );
+        }
+        return null;
+    };
 
     // Add new state for editing
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const [roomTitle, setRoomTitle] = useState('Yarashii Room');
+    const [roomTitle, setRoomTitle] = useState(() => {
+        // Get the room name from the conference state or from the URL
+        const roomFromUrl = window.location.pathname.split('/').pop();
+        return roomFromUrl || 'Meeting Room';
+    });
 
     // Add new function to handle title update
     const handleTitleUpdate = () => {
         setIsEditingTitle(false);
-        // Here you can add logic to update the room name in your backend if needed
     };
 
-    // Add sticker helper function
-    const addSticker = (
-        type: 'emoji' | 'image',
-        content: string,
-        position: { x: number; y: number },
-        size: number,
-        rotation: number
-    ) => {
-        setStickers(prev => [...prev, {
-            type,
-            content,
-            position,
-            size,
-            rotation
-        }]);
+    const deleteTemplate = (templateId: string) => {
+        setTemplates(prev => prev.filter(t => t.id !== templateId));
+        
+        // Update localStorage
+        const savedTemplates = JSON.parse(localStorage.getItem('backgroundTemplates') || '[]');
+        localStorage.setItem('backgroundTemplates', JSON.stringify(savedTemplates.filter((t: Template) => t.id !== templateId)));
     };
+
+    // Add useEffect to load templates from localStorage
+    useEffect(() => {
+        const savedTemplates = localStorage.getItem('backgroundTemplates');
+        if (savedTemplates) {
+            setTemplates(JSON.parse(savedTemplates));
+        }
+    }, []);
+
+    // Add this new effect to initialize video
+    useEffect(() => {
+        // Find the video elements
+        const largeVideo = document.getElementById('largeVideo') as HTMLVideoElement;
+        const localVideo = document.getElementById('localVideo_container') as HTMLVideoElement;
+        
+        if (largeVideo) {
+            // Make sure video is visible and properly sized
+            largeVideo.style.display = 'block';
+            largeVideo.style.width = '100%';
+            largeVideo.style.height = '100%';
+            largeVideo.style.objectFit = 'cover';
+            
+            // Enable dragging on the video container
+            const container = document.getElementById('largeVideoContainer');
+            if (container) {
+                container.style.position = 'relative';
+                container.style.cursor = 'move';
+                
+                let isDragging = false;
+                let currentX: number;
+                let currentY: number;
+                let initialX: number;
+                let initialY: number;
+                let xOffset = 0;
+                let yOffset = 0;
+
+                const dragStart = (e: MouseEvent) => {
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+                    
+                    if (e.target === container) {
+                        isDragging = true;
+                    }
+                };
+
+                const drag = (e: MouseEvent) => {
+                    if (isDragging) {
+                        e.preventDefault();
+                        currentX = e.clientX - initialX;
+                        currentY = e.clientY - initialY;
+                        
+                        xOffset = currentX;
+                        yOffset = currentY;
+                        
+                        container.style.transform = 
+                            `translate3d(${currentX}px, ${currentY}px, 0)`;
+                    }
+                };
+
+                const dragEnd = () => {
+                    isDragging = false;
+                };
+
+                container.addEventListener('mousedown', dragStart);
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', dragEnd);
+            }
+        }
+        
+        if (localVideo) {
+            // Make sure local video is visible
+            localVideo.style.display = 'block';
+            localVideo.style.width = '100%';
+            localVideo.style.height = '100%';
+            localVideo.style.objectFit = 'cover';
+        }
+    }, []);
 
     return (
         <>
+        <TemplatesData />
+
             {/* Back button */}
             <div 
                 className={classes.backButton}
@@ -4892,6 +5465,13 @@ const BackgroundSelector = () => {
                         multiple
                     />
                 </label>
+                
+                <button 
+                    className={classes.drawingButton}
+                    onClick={() => setShowTemplates(!showTemplates)}
+                    title="Templates">
+                    <TemplateIcon />
+                </button>
                 
                 <button 
                     className={classes.drawingButton}
