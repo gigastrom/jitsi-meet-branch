@@ -13,22 +13,7 @@ html, body {
     padding: 0;
 }
 
-// Main container styles - ensure it's transparent to show the body background
-#app, #videoconference_page, #largeVideoContainer {
-    background-color: transparent !important;
-    pointer-events: auto !important; // Enable pointer events
-}
 
-// Hide large video container content but keep the container
-#largeVideoContainer {
-    background-color: transparent !important; // Make transparent to show body background
-    z-index: 1 !important; // Lower z-index to ensure it doesn't block interactions
-    
-    // Hide the video element inside
-    #largeVideo {
-        display: none !important;
-    }
-}
 
 // Make sure no overlays block dragging
 #remoteVideos,
@@ -41,42 +26,6 @@ html, body {
 #dominantSpeaker,
 #dominantSpeakerAvatarContainer {
     display: none !important;
-}
-
-// Make thumbnails circular and draggable with very high z-index
-.filmstrip {
-    &__videos {
-        .videocontainer {
-            border-radius: 50% !important;
-            overflow: hidden !important;
-            cursor: move !important; // Cursor indicates draggable
-            position: absolute !important; // Required for free positioning
-            z-index: 9999 !important; // Extremely high z-index to ensure they're on top
-            video {
-                object-fit: cover !important;
-            }
-        }
-    }
-}
-
-#filmstripLocalVideo,
-#filmstripRemoteVideos {
-    .videocontainer {
-        border-radius: 50% !important;
-        overflow: hidden !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-        border: 2px solid white !important;
-        margin: 10px !important;
-        video {
-            object-fit: cover !important;
-        }
-    }
-}
-
-// Make sure video containers are draggable
-.videocontainer {
-    z-index: 9999 !important; // Extremely high z-index
-    background-color: transparent !important; // Ensure video containers don't have background
 }
 
 // Remove fixed positioning for filmstrip container to allow free movement

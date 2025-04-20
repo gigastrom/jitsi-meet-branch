@@ -41,11 +41,7 @@
     filter: blur(40px);
 }
 
-.videocontainer {
-    position: relative;
-    text-align: center;
-    overflow: 'hidden';
-}
+
 
 #localVideoWrapper {
     display:inline-block;
@@ -65,16 +61,6 @@
     object-fit: cover;
 }
 
-#largeVideo,
-#largeVideoWrapper,
-#largeVideoContainer {
-    overflow: hidden;
-    text-align: center;
-
-    &.transition {
-        transition: width 1s, height 1s, top 1s;
-    }
-}
 
 .animatedFadeIn {
     opacity: 0;
@@ -105,14 +91,6 @@
     }
 }
 
-#largeVideoContainer {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    margin: 0 !important;
-}
 
 #largeVideoWrapper {
     box-shadow: 0 0 20px -2px #444;

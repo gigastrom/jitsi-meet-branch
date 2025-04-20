@@ -126,18 +126,32 @@ interface IProps {
     dispatch: IStore['dispatch'];
 }
 
+interface IState {
+    isDragging: boolean;
+    currentX: number;
+    currentY: number;
+    initialX: number;
+    initialY: number;
+    lastX: number;
+    lastY: number;
+    velocity: {
+        x: number;
+        y: number;
+    };
+}
+
 /** .
  * Implements a React {@link Component} which represents the large video (a.k.a.
  * The conference participant who is on the local stage) on Web/React.
  *
  * @augments Component
  */
-class LargeVideo extends Component<IProps> {
+class LargeVideo extends Component<IProps, IState> {
     _tappedTimeout: number | undefined;
-
     _containerRef: React.RefObject<HTMLDivElement>;
-
     _wrapperRef: React.RefObject<HTMLDivElement>;
+    _animationFrame: number | undefined;
+    _lastTimestamp: number;
 
     /**
      * Constructor of the component.
@@ -147,19 +161,33 @@ class LargeVideo extends Component<IProps> {
     constructor(props: IProps) {
         super(props);
 
+        this.state = {
+            isDragging: false,
+            currentX: 0,
+            currentY: 0,
+            initialX: 0,
+            initialY: 0,
+            lastX: 0,
+            lastY: 0,
+            velocity: {
+                x: 0,
+                y: 0
+            }
+        };
+
         this._containerRef = React.createRef<HTMLDivElement>();
         this._wrapperRef = React.createRef<HTMLDivElement>();
+        this._lastTimestamp = 0;
 
         this._clearTapTimeout = this._clearTapTimeout.bind(this);
         this._onDoubleTap = this._onDoubleTap.bind(this);
         this._updateLayout = this._updateLayout.bind(this);
+        this._handleDragStart = this._handleDragStart.bind(this);
+        this._handleDragEnd = this._handleDragEnd.bind(this);
+        this._handleDrag = this._handleDrag.bind(this);
+        this._updatePosition = this._updatePosition.bind(this);
     }
 
-    /**
-     * Implements {@code Component#componentDidUpdate}.
-     *
-     * @inheritdoc
-     */
     override componentDidUpdate(prevProps: IProps) {
         const {
             _visibleFilmstrip,
@@ -187,6 +215,12 @@ class LargeVideo extends Component<IProps> {
         }
     }
 
+    override componentWillUnmount() {
+        if (this._animationFrame) {
+            cancelAnimationFrame(this._animationFrame);
+        }
+    }
+
     /**
      * Implements React's {@link Component#render()}.
      *
@@ -200,62 +234,125 @@ class LargeVideo extends Component<IProps> {
             _isDisplayNameVisible,
             _noAutoPlayVideo,
             _showDominantSpeakerBadge,
-            _whiteboardEnabled
+            _whiteboardEnabled,
+            _visibleFilmstrip
         } = this.props;
-        const style = this._getCustomStyles();
-        const className = `videocontainer${_isChatOpen ? ' shift-right' : ''}`;
+        
+        const customStyles = this._getCustomStyles();
+        const bubbleStyles = {
+            ...customStyles,
+            position: 'fixed' as const,
+            top: '20px',
+            right: '20px',
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            cursor: 'move',
+            zIndex: 9999,
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+            transition: this.state.isDragging ? 'none' : 'box-shadow 0.3s ease',
+            transform: `translate3d(${this.state.currentX}px, ${this.state.currentY}px, 0)`,
+            touchAction: 'none',
+            userSelect: 'none' as const,
+            willChange: 'transform',
+            backgroundColor: customStyles.backgroundColor || '#000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        };
+
+        const videoStyles = {
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover' as const,
+            borderRadius: '50%',
+            transition: 'transform 0.3s ease',
+            minWidth: '100%',
+            minHeight: '100%',
+            transform: 'translate(-50%, -50%)',
+            border: '4px solid transparent',
+            backgroundImage: 'linear-gradient(white, white), linear-gradient(45deg, #ff6b6b, #4ecdc4)',
+            backgroundOrigin: 'border-box',
+            backgroundClip: 'content-box, border-box'
+        };
+
+        const containerStyles = {
+            position: 'relative' as const,
+            width: '100%',
+            height: '100%',
+            zIndex: 9999,
+            overflow: 'hidden',
+            borderRadius: '50%'
+        };
+
+        const videoWrapperStyles = {
+            position: 'relative' as const,
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        };
 
         return (
             <div
-                className = { className }
-                id = 'largeVideoContainer'
+                style={bubbleStyles}
+                id = 'newlargeVideoContainer'
                 ref = { this._containerRef }
-                style = { style }>
-                <SharedVideo />
-                {_whiteboardEnabled && <Whiteboard />}
-                <div id = 'etherpad' />
+                onMouseDown = { this._handleDragStart }
+                onMouseMove = { this._handleDrag }
+                onMouseUp = { this._handleDragEnd }
+                onMouseLeave = { this._handleDragEnd }
+                onTouchStart = { this._handleDragStart }
+                onTouchMove = { this._handleDrag }
+                onTouchEnd = { this._handleDragEnd }>
+                <div style={containerStyles}>
+                    <SharedVideo />
+                    {_whiteboardEnabled && <Whiteboard />}
+                    <div id = 'etherpad' />
+                    <Watermarks />
 
-                <Watermarks />
-
-                <div
-                    id = 'dominantSpeaker'
-                    onTouchEnd = { this._onDoubleTap }>
-                    <div className = 'dynamic-shadow' />
-                    <div id = 'dominantSpeakerAvatarContainer' />
-                </div>
-                <div id = 'remotePresenceMessage' />
-                <span id = 'remoteConnectionMessage' />
-                <div id = 'largeVideoElementsContainer'>
-                    <div id = 'largeVideoBackgroundContainer' />
-                    {/*
-                      * FIXME: the architecture of elements related to the large
-                      * video and the naming. The background is not part of
-                      * largeVideoWrapper because we are controlling the size of
-                      * the video through largeVideoWrapper. That's why we need
-                      * another container for the background and the
-                      * largeVideoWrapper in order to hide/show them.
-                      */}
-                    { _displayScreenSharingPlaceholder ? <ScreenSharePlaceholder /> : <></>}
                     <div
-                        id = 'largeVideoWrapper'
+                        id = 'dominantSpeaker'
                         onTouchEnd = { this._onDoubleTap }
-                        ref = { this._wrapperRef }
-                        role = 'figure' >
-                        <video
-                            autoPlay = { !_noAutoPlayVideo }
-                            id = 'largeVideo'
-                            muted = { true }
-                            playsInline = { true } /* for Safari on iOS to work */ />
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
+                        <div className = 'dynamic-shadow' />
+                        <div id = 'dominantSpeakerAvatarContainer' />
                     </div>
+                    
+                    <div id = 'remotePresenceMessage' style={{ position: 'absolute', zIndex: 2 }} />
+                    <span id = 'remoteConnectionMessage' style={{ position: 'absolute', zIndex: 2 }} />
+                    
+                    <div id = 'largeVideoElementsContainer' style={videoWrapperStyles}>
+                        <div id = 'largeVideoBackgroundContainer' style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+                        { _displayScreenSharingPlaceholder ? <ScreenSharePlaceholder /> : <></>}
+                        <div
+                            id = ''
+                            onTouchEnd = { this._onDoubleTap }
+                            ref = { this._wrapperRef }
+                            role = 'figure'
+                            style={videoWrapperStyles}>
+                            <video
+                                style={videoStyles}
+                                autoPlay = { !_noAutoPlayVideo }
+                                id = 'largeVideo'
+                                muted = { true }
+                                playsInline = { true } />
+                        </div>
+                    </div>
+                    
+                    { interfaceConfig.DISABLE_TRANSCRIPTION_SUBTITLES
+                        || <Captions /> }
+                    {
+                        _isDisplayNameVisible
+                        && (
+                            _showDominantSpeakerBadge && <StageParticipantNameLabel />
+                        )
+                    }
                 </div>
-                { interfaceConfig.DISABLE_TRANSCRIPTION_SUBTITLES
-                    || <Captions /> }
-                {
-                    _isDisplayNameVisible
-                    && (
-                        _showDominantSpeakerBadge && <StageParticipantNameLabel />
-                    )
-                }
             </div>
         );
     }
@@ -347,6 +444,106 @@ class LargeVideo extends Component<IProps> {
             this.props.dispatch(setTileView(true));
         } else {
             this._tappedTimeout = window.setTimeout(this._clearTapTimeout, 300);
+        }
+    }
+
+    _updatePosition(timestamp: number) {
+        if (!this.state.isDragging && (this.state.velocity.x !== 0 || this.state.velocity.y !== 0)) {
+            const deltaTime = timestamp - this._lastTimestamp;
+            const friction = 0.95;
+
+            const newVelocity = {
+                x: this.state.velocity.x * friction,
+                y: this.state.velocity.y * friction
+            };
+
+            const newX = this.state.currentX + newVelocity.x * deltaTime / 16;
+            const newY = this.state.currentY + newVelocity.y * deltaTime / 16;
+
+            // Stop animation when velocity is very small
+            if (Math.abs(newVelocity.x) < 0.01 && Math.abs(newVelocity.y) < 0.01) {
+                this.setState({
+                    velocity: { x: 0, y: 0 }
+                });
+            } else {
+                this.setState({
+                    currentX: newX,
+                    currentY: newY,
+                    velocity: newVelocity
+                });
+                this._animationFrame = requestAnimationFrame(this._updatePosition);
+            }
+        }
+        this._lastTimestamp = timestamp;
+    }
+
+    _handleDragStart(e: React.TouchEvent | React.MouseEvent) {
+        if (this._animationFrame) {
+            cancelAnimationFrame(this._animationFrame);
+        }
+
+        let clientX, clientY;
+        if (e.type === 'mousedown') {
+            const mouseEvent = e as React.MouseEvent;
+            clientX = mouseEvent.clientX;
+            clientY = mouseEvent.clientY;
+        } else {
+            const touchEvent = e as React.TouchEvent;
+            clientX = touchEvent.touches[0].clientX;
+            clientY = touchEvent.touches[0].clientY;
+        }
+
+        this.setState({
+            isDragging: true,
+            initialX: clientX - this.state.currentX,
+            initialY: clientY - this.state.currentY,
+            lastX: this.state.currentX,
+            lastY: this.state.currentY,
+            velocity: { x: 0, y: 0 }
+        });
+    }
+
+    _handleDragEnd() {
+        const deltaTime = 16; // Assuming 60fps
+        const velocityX = (this.state.currentX - this.state.lastX) / deltaTime;
+        const velocityY = (this.state.currentY - this.state.lastY) / deltaTime;
+
+        this.setState({
+            isDragging: false,
+            velocity: {
+                x: velocityX,
+                y: velocityY
+            }
+        }, () => {
+            this._lastTimestamp = performance.now();
+            this._animationFrame = requestAnimationFrame(this._updatePosition);
+        });
+    }
+
+    _handleDrag(e: React.TouchEvent | React.MouseEvent) {
+        if (this.state.isDragging) {
+            e.preventDefault();
+
+            let clientX, clientY;
+            if ((e as React.MouseEvent).clientX !== undefined) {
+                const mouseEvent = e as React.MouseEvent;
+                clientX = mouseEvent.clientX;
+                clientY = mouseEvent.clientY;
+            } else {
+                const touchEvent = e as React.TouchEvent;
+                clientX = touchEvent.touches[0].clientX;
+                clientY = touchEvent.touches[0].clientY;
+            }
+
+            const newX = clientX - this.state.initialX;
+            const newY = clientY - this.state.initialY;
+
+            this.setState({
+                currentX: newX,
+                currentY: newY,
+                lastX: this.state.currentX,
+                lastY: this.state.currentY
+            });
         }
     }
 }

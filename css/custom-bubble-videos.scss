@@ -16,11 +16,6 @@ html, body {
     background-color: transparent !important;
 }
 
-/* Hide the large video display */
-#largeVideoContainer {
-    background-color: transparent !important;
-    z-index: 1 !important;
-}
 
 /* Style for the filmstrip */
 .filmstrip {
@@ -31,27 +26,7 @@ html, body {
     /* Allow clicking through the filmstrip container */
 }
 
-/* Style for the video container */
-.videocontainer {
-    position: absolute !important;
-    border-radius: 50% !important;
-    overflow: hidden !important;
-    border: 2px solid white !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-    cursor: move !important;
-    z-index: 1000 !important;
-    /* Make sure it's above other elements */
-    transition: box-shadow 0.3s ease !important;
-    pointer-events: auto !important;
-    /* Make sure it catches pointer events */
-    height: 120px !important;
-    width: 120px !important;
-    background-color: transparent !important;
-}
 
-.videocontainer:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3) !important;
-}
 
 /* Make video circular */
 .filmstrip video {
@@ -61,25 +36,6 @@ html, body {
     width: 100% !important;
 }
 
-/* Fix pointer events on key elements */
-#largeVideoWrapper,
-#videospace,
-#largeVideoContainer {
-    pointer-events: auto !important;
-    background-color: transparent !important; 
-}
-
-/* Make sure all content within the video container can be clicked/interacted with */
-.videocontainer * {
-    pointer-events: auto !important;
-}
-
-/* Video space container - should be transparent to show body background */
-#videospace {
-    background-color: transparent !important;
-    min-height: 100vh;
-    min-width: 100vw;
-}
 
 /* Background selector styles */
 .background-selector {

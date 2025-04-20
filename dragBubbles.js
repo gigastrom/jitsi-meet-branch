@@ -11,6 +11,10 @@
     let offsetX = 0;
     let offsetY = 0;
 
+    // Track the last positioned container
+    let lastTopPosition = 20; // Initial top margin
+    const CONTAINER_MARGIN = 10; // Margin between containers
+
     /**
      * Initialize the draggable functionality
      */
@@ -38,14 +42,14 @@
             // Setup background selector
             initBackgroundSelector();
 
-            // Hide the large video container
-            const largeVideo = document.getElementById('largeVideoContainer');
-            if (largeVideo) {
-                largeVideo.style.display = 'none';
+            // Hide the large video container and set up new container
+            const newLargeVideoContainer = document.getElementById('newLargeVideoContainer');
+            if (newLargeVideoContainer) {
+                newLargeVideoContainer.style.display = 'none';
             }
 
             // Make sure we can click through overlays
-            const overlays = document.querySelectorAll('#largeVideoElementsContainer, #videoNotAvailableScreen');
+            const overlays = document.querySelectorAll('#videoElementsContainer, #videoNotAvailableScreen');
             overlays.forEach(overlay => {
                 if (overlay) {
                     overlay.style.pointerEvents = 'none';
@@ -86,23 +90,30 @@
             // Get ID for position tracking
             const id = container.id || `video-${Math.random().toString(36).substring(2, 9)}`;
 
-            // Restore or set initial position
+            // Restore saved position or set initial position in top right
             const savedPosition = getSavedPosition(id);
             if (savedPosition) {
                 container.style.left = `${savedPosition.left}px`;
                 container.style.top = `${savedPosition.top}px`;
             } else {
-                // Random position
-                const maxX = window.innerWidth - 150;
-                const maxY = window.innerHeight - 150;
-                const randomX = 50 + Math.random() * (maxX - 100);
-                const randomY = 50 + Math.random() * (maxY - 100);
+                // Position in top right with stacking
+                const containerWidth = container.offsetWidth || 150; // Default width if not set
+                const rightPosition = window.innerWidth - containerWidth - 20; // 20px margin from right
 
-                container.style.left = `${randomX}px`;
-                container.style.top = `${randomY}px`;
+                container.style.right = '20px'; // Fixed right margin
+                container.style.left = `${rightPosition}px`;
+                container.style.top = `${lastTopPosition}px`;
+
+                // Update the top position for the next container
+                lastTopPosition += (container.offsetHeight || 150) + CONTAINER_MARGIN;
 
                 // Save initial position
-                savePosition(id, randomX, randomY);
+                savePosition(id, rightPosition, lastTopPosition);
+            }
+
+            // Reset lastTopPosition if it gets too low
+            if (lastTopPosition > window.innerHeight - 200) {
+                lastTopPosition = 20;
             }
 
             // Add mouse event listeners
@@ -266,13 +277,23 @@
         const maxX = window.innerWidth - width;
         const maxY = window.innerHeight - height;
 
-        // Constrain position to viewport
-        const boundedX = Math.max(0, Math.min(x, maxX));
-        const boundedY = Math.max(0, Math.min(y, maxY));
+        // Get the videospace element for boundaries
+        const videospace = document.getElementById('videospace');
+        const videospaceRect = videospace ? videospace.getBoundingClientRect() : null;
 
-        // Apply position
-        element.style.left = `${boundedX}px`;
-        element.style.top = `${boundedY}px`;
+        // If videospace exists, use its boundaries
+        if (videospaceRect) {
+            const boundedX = Math.max(videospaceRect.left, Math.min(x, videospaceRect.right - width));
+            const boundedY = Math.max(videospaceRect.top, Math.min(y, videospaceRect.bottom - height));
+            element.style.left = `${boundedX}px`;
+            element.style.top = `${boundedY}px`;
+        } else {
+            // Fallback to viewport bounds
+            const boundedX = Math.max(0, Math.min(x, maxX));
+            const boundedY = Math.max(0, Math.min(y, maxY));
+            element.style.left = `${boundedX}px`;
+            element.style.top = `${boundedY}px`;
+        }
     }
 
     /**
@@ -326,19 +347,27 @@
                 </div>
             `;
 
-            document.body.appendChild(selector);
+            // Insert the selector into the videospace
+            const videospace = document.getElementById('videospace');
+            if (videospace) {
+                videospace.appendChild(selector);
+            } else {
+                document.body.appendChild(selector);
+            }
 
             // Add event listeners for background selection
             selector.querySelectorAll('.background-option').forEach(option => {
                 option.addEventListener('click', function() {
                     const bgValue = this.getAttribute('data-background');
                     
-                    // Apply to the entire page (html and body)
-                    document.documentElement.style.backgroundColor = bgValue;
-                    document.body.style.backgroundColor = bgValue;
+                    // Apply to the videospace
+                    const videospace = document.getElementById('videospace');
+                    if (videospace) {
+                        videospace.style.backgroundColor = bgValue;
+                    }
                     
                     // Make sure all container elements are transparent
-                    const containers = document.querySelectorAll('#videospace, #largeVideoContainer, .videocontainer');
+                    const containers = document.querySelectorAll('#newLargeVideoContainer, .videocontainer');
                     containers.forEach(container => {
                         if (container) {
                             container.style.backgroundColor = 'transparent';
@@ -353,12 +382,14 @@
             // Load saved background
             const savedBg = localStorage.getItem('selectedBackground');
             if (savedBg) {
-                // Apply to the entire page (html and body)
-                document.documentElement.style.backgroundColor = savedBg;
-                document.body.style.backgroundColor = savedBg;
+                // Apply to the videospace
+                const videospace = document.getElementById('videospace');
+                if (videospace) {
+                    videospace.style.backgroundColor = savedBg;
+                }
                 
                 // Make sure all container elements are transparent
-                const containers = document.querySelectorAll('#videospace, #largeVideoContainer, .videocontainer');
+                const containers = document.querySelectorAll('#newLargeVideoContainer, .videocontainer');
                 containers.forEach(container => {
                     if (container) {
                         container.style.backgroundColor = 'transparent';
@@ -367,4 +398,12 @@
             }
         }
     }
+
+    /**
+     * Reset the position tracking when window is resized
+     */
+    window.addEventListener('resize', () => {
+        lastTopPosition = 20;
+        setupDragHandlers();
+    });
 })();

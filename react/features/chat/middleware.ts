@@ -506,6 +506,16 @@ function _handleReceivedMessage({ dispatch, getState }: IStore,
         shouldPlaySound = true,
         isReaction = false
 ) {
+    // Skip background sync messages
+    try {
+        const parsedMessage = JSON.parse(message);
+        if (parsedMessage.type === 'jitsi-background-sync') {
+            return;
+        }
+    } catch (e) {
+        // If message is not JSON or parsing fails, process it as a regular message
+    }
+
     // Logic for all platforms:
     const state = getState();
     const { isOpen: isChatOpen } = state['features/chat'];

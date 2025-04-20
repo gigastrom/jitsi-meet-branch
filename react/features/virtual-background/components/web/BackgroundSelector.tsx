@@ -27,6 +27,7 @@ import Avatar from '../../../base/avatar/components/Avatar';
 import { createSharedBackgroundEvent } from '../../actions';
 import { getCurrentConference } from '../../../base/conference/functions';
 import { JitsiConferenceEvents } from '../../../base/lib-jitsi-meet';
+import { getConferenceName } from '../../../base/conference/functions';
 // Import participants pane action
 // import { open as openParticipantsPane } from '../../../participants-pane/actions.web';
 
@@ -269,1155 +270,1238 @@ const MoreOptionsIcon = () => (
     </svg>
 );
 
-const useStyles = makeStyles()(() => {
-    return {
-        container: {
-            position: 'absolute',
-            top: '70px',  // Position below the control bar
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'white',
-            borderRadius: '8px',
-            padding: '10px',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-            zIndex: 99, // Lower than the control bar
-            display: 'flex',
-            flexDirection: 'column',
-            maxWidth: '350px',
-            width: '90%'
+const useStyles = makeStyles()(() => ({
+    container: {
+        position: 'absolute',
+        top: '70px',  // Position below the control bar
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'white',
+        borderRadius: '8px',
+        padding: '10px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        zIndex: 99, // Lower than the control bar
+        display: 'flex',
+        flexDirection: 'column',
+        maxWidth: '350px',
+        width: '90%'
+    },
+    buttonContainer: {
+        position: 'absolute',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: '8px',
+        zIndex: 100,
+        alignItems: 'center',
+        background: 'transparent', // Changed from dark background to transparent
+        borderRadius: '20px',
+        padding: '4px 15px 4px 8px',
+    },
+    toggleButton: {
+        background: 'transparent', // Changed from dark background to transparent
+        borderRadius: '8px', // Changed from circular to slightly rounded
+        width: '32px',
+        height: '32px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px',
+        transition: 'all 0.2s',
+        border: 'none',
+        color: 'white',
+        marginLeft: '3px',
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
+            transform: 'scale(1.05)'
         },
-        buttonContainer: {
-            position: 'absolute',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: '8px',
-            zIndex: 100,
-            alignItems: 'center',
-            background: 'transparent', // Changed from dark background to transparent
-            borderRadius: '20px',
-            padding: '4px 15px 4px 8px',
+        '&:active': {
+            transform: 'scale(0.95)'
+        }
+    },
+    mediaButton: {
+        background: 'transparent', // Changed from dark background to transparent
+        borderRadius: '8px', // Changed from circular to slightly rounded
+        width: '32px',
+        height: '32px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px',
+        transition: 'all 0.2s',
+        border: 'none',
+        color: 'white',
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
+            transform: 'scale(1.05)'
         },
-        toggleButton: {
-            background: 'transparent', // Changed from dark background to transparent
-            borderRadius: '8px', // Changed from circular to slightly rounded
-            width: '32px',
-            height: '32px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            transition: 'all 0.2s',
-            border: 'none',
-            color: 'white',
-            marginLeft: '3px',
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
-                transform: 'scale(1.05)'
-            },
-            '&:active': {
-                transform: 'scale(0.95)'
-            }
+        '&:active': {
+            transform: 'scale(0.95)'
+        }
+    },
+    activeMediaButton: {
+        background: 'transparent', // Changed from dark background to transparent
+        color: 'white',
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
+        }
+    },
+    inactiveMediaButton: {
+        color: '#e73446', // Changed to just red text color without background
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
+        }
+    },
+    buttonIcon: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: 'scale(0.85)'
+    },
+    titleBar: {
+        fontWeight: 'bold',
+        color: 'white',
+        fontSize: '14px',
+        marginRight: '8px',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '120px',
+        display: 'flex',
+        alignItems: 'center'
+    },
+    dropdownArrow: {
+        marginLeft: '8px',
+        width: '10px',
+        height: '10px',
+        borderLeft: '5px solid transparent',
+        borderRight: '5px solid transparent',
+        borderTop: '5px solid white',
+        display: 'inline-block'
+    },
+    title: {
+        fontSize: '14px',
+        fontWeight: 'bold',
+        marginBottom: '8px',
+        textAlign: 'center'
+    },
+    options: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        maxWidth: '320px'
+    },
+    option: {
+        width: '60px',
+        height: '40px',
+        margin: '5px',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        transition: 'transform 0.2s',
+        '&:hover': {
+            transform: 'scale(1.05)'
+        }
+    },
+    active: {
+        border: '2px solid #4c9aff'
+    },
+    inviteButton: {
+        position: 'absolute',
+        top: '20px',
+        right: '20px',
+        background: '#FF5F6D', // Default color that will be overridden by theme
+        color: '#fff',
+        borderRadius: '32px',
+        padding: '8px 20px 8px 16px',
+        fontSize: '15px',
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        border: 'none',
+        fontWeight: 'bold',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+        transition: 'all 0.2s ease',
+        zIndex: 100,
+        '&:hover': {
+            transform: 'scale(1.05)',
+            filter: 'brightness(0.9)'  // This will work with any background color
         },
-        mediaButton: {
-            background: 'transparent', // Changed from dark background to transparent
-            borderRadius: '8px', // Changed from circular to slightly rounded
-            width: '32px',
-            height: '32px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            transition: 'all 0.2s',
-            border: 'none',
-            color: 'white',
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
-                transform: 'scale(1.05)'
-            },
-            '&:active': {
-                transform: 'scale(0.95)'
-            }
+        '@media (max-width: 500px)': {
+            display: 'none'
+        }
+    },
+    plusSign: {
+        fontSize: '20px', // Make the plus sign bigger
+        marginRight: '6px',
+        fontWeight: 'bold'
+    },
+    inviteIcon: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    backgroundButton: {
+        background: 'transparent', // Changed from dark background to transparent
+        borderRadius: '8px', // Changed from circular to slightly rounded
+        width: '32px',
+        height: '32px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px',
+        transition: 'all 0.2s',
+        border: 'none',
+        color: 'white',
+        marginLeft: '3px',
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
+            transform: 'scale(1.05)'
         },
-        activeMediaButton: {
-            background: 'transparent', // Changed from dark background to transparent
-            color: 'white',
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
-            }
-        },
-        inactiveMediaButton: {
-            color: '#e73446', // Changed to just red text color without background
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
-            }
-        },
-        buttonIcon: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: 'scale(0.85)'
-        },
-        titleBar: {
-            fontWeight: 'bold',
-            color: 'white',
-            fontSize: '14px',
-            marginRight: '8px',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: '120px',
-            display: 'flex',
-            alignItems: 'center'
-        },
-        dropdownArrow: {
-            marginLeft: '8px',
-            width: '10px',
-            height: '10px',
-            borderLeft: '5px solid transparent',
-            borderRight: '5px solid transparent',
-            borderTop: '5px solid white',
-            display: 'inline-block'
-        },
-        title: {
-            fontSize: '14px',
-            fontWeight: 'bold',
-            marginBottom: '8px',
-            textAlign: 'center'
-        },
-        options: {
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            maxWidth: '320px'
-        },
-        option: {
-            width: '60px',
-            height: '40px',
-            margin: '5px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            transition: 'transform 0.2s',
-            '&:hover': {
-                transform: 'scale(1.05)'
-            }
-        },
-        active: {
-            border: '2px solid #4c9aff'
-        },
-        inviteButton: {
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            background: '#FF5F6D', // Default color that will be overridden by theme
-            color: '#fff',
-            borderRadius: '32px',
-            padding: '8px 20px 8px 16px',
-            fontSize: '15px',
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            border: 'none',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
-            transition: 'all 0.2s ease',
-            zIndex: 100,
-            '&:hover': {
-                transform: 'scale(1.05)',
-                filter: 'brightness(0.9)'  // This will work with any background color
-            }
-        },
-        plusSign: {
-            fontSize: '20px', // Make the plus sign bigger
-            marginRight: '6px',
-            fontWeight: 'bold'
-        },
-        inviteIcon: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        backgroundButton: {
-            background: 'transparent', // Changed from dark background to transparent
-            borderRadius: '8px', // Changed from circular to slightly rounded
-            width: '32px',
-            height: '32px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            transition: 'all 0.2s',
-            border: 'none',
-            color: 'white',
-            marginLeft: '3px',
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
-                transform: 'scale(1.05)'
-            },
-            '&:active': {
-                transform: 'scale(0.95)'
-            }
-        },
-        uploadOption: {
-            width: '60px',
-            height: '40px',
-            margin: '5px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            background: 'rgba(83, 83, 83, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden',
-            border: '1px dashed rgba(255, 255, 255, 0.5)',
-            '&:hover': {
-                transform: 'scale(1.05)',
-                background: 'rgba(83, 83, 83, 0.9)',
-                borderColor: 'rgba(255, 255, 255, 0.8)',
-            }
-        },
-        uploadInput: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0,
-            cursor: 'pointer',
-        },
-        uploadIcon: {
-            width: '24px',
-            height: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        customBackgrounds: {
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            marginTop: '8px',
-            padding: '8px 0',
-            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-        },
-        customBgTitle: {
-            fontSize: '12px',
-            color: '#666',
-            width: '100%',
-            textAlign: 'center',
-            marginBottom: '5px',
-        },
-        customOption: {
-            position: 'relative',
-            overflow: 'hidden',
-        },
-        deleteButton: {
-            position: 'absolute',
-            top: '2px',
-            right: '2px',
-            width: '18px',
-            height: '18px',
-            borderRadius: '50%',
-            background: 'rgba(255, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            opacity: 0,
-            transition: 'opacity 0.2s',
-            zIndex: 1,
-            '&:hover': {
-                background: 'rgba(255, 0, 0, 0.9)',
-            }
-        },
-        customBackgroundOption: {
-            '&:hover $deleteButton': {
-                opacity: 1,
-            }
-        },
-        uploadsSection: {
-            marginTop: '12px',
-            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-            paddingTop: '8px',
-        },
-        uploadLabel: {
-            position: 'absolute',
-            bottom: '3px',
-            left: 0,
-            right: 0,
-            fontSize: '8px',
-            textAlign: 'center',
-            color: 'rgba(255, 255, 255, 0.8)',
-            background: 'rgba(0, 0, 0, 0.3)',
-            padding: '1px 0',
-        },
-        drawingToolbar: {
-            position: 'absolute',
-            top: 'auto', // Remove top positioning
-            right: 'auto', // Remove right positioning
-            bottom: '20px', // Position at bottom
-            left: '50%', // Center horizontally
-            transform: 'translateX(-50%)', // Center adjustment
-            background: 'rgba(0, 0, 0, 0.7)', // Add slightly darker background for visibility
-            borderRadius: '20px',
-            padding: '8px 16px', // Add more horizontal padding
-            display: 'flex',
-            flexDirection: 'row', // Change to row for horizontal layout
-            gap: '8px',
-            zIndex: 100,
-            alignItems: 'center',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)', // Add shadow for better visibility
-        },
-        drawingButton: {
-            width: '40px',
-            height: '40px',
-            borderRadius: '8px', // Changed from circular to slightly rounded
-            background: 'transparent', // Removed dark background
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            border: 'none',
-            transition: 'all 0.2s',
-            color: '#ffffff', // Added white color for icon visibility
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
-                transform: 'scale(1.05)'
-            },
-            '&:active': {
-                transform: 'scale(0.95)'
-            }
-        },
-        activeDrawingTool: {
-            background: 'rgba(255, 255, 255, 0.2)', // Light background for active state
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.3)',
-            }
-        },
-        colorGrid: {
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+        '&:active': {
+            transform: 'scale(0.95)'
+        }
+    },
+    uploadOption: {
+        width: '60px',
+        height: '40px',
+        margin: '5px',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        background: 'rgba(83, 83, 83, 0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px dashed rgba(255, 255, 255, 0.5)',
+        '&:hover': {
+            transform: 'scale(1.05)',
+            background: 'rgba(83, 83, 83, 0.9)',
+            borderColor: 'rgba(255, 255, 255, 0.8)',
+        }
+    },
+    uploadInput: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        opacity: 0,
+        cursor: 'pointer',
+    },
+    uploadIcon: {
+        width: '24px',
+        height: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    customBackgrounds: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        marginTop: '8px',
+        padding: '8px 0',
+        borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+    },
+    customBgTitle: {
+        fontSize: '12px',
+        color: '#666',
+        width: '100%',
+        textAlign: 'center',
+        marginBottom: '5px',
+    },
+    customOption: {
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    deleteButton: {
+        position: 'absolute',
+        top: '2px',
+        right: '2px',
+        width: '18px',
+        height: '18px',
+        borderRadius: '50%',
+        background: 'rgba(255, 0, 0, 0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        opacity: 0,
+        transition: 'opacity 0.2s',
+        zIndex: 1,
+        '&:hover': {
+            background: 'rgba(255, 0, 0, 0.9)',
+        }
+    },
+    customBackgroundOption: {
+        '&:hover $deleteButton': {
+            opacity: 1,
+        }
+    },
+    uploadsSection: {
+        marginTop: '12px',
+        borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+        paddingTop: '8px',
+    },
+    uploadLabel: {
+        position: 'absolute',
+        bottom: '3px',
+        left: 0,
+        right: 0,
+        fontSize: '8px',
+        textAlign: 'center',
+        color: 'rgba(255, 255, 255, 0.8)',
+        background: 'rgba(0, 0, 0, 0.3)',
+        padding: '1px 0',
+    },
+    drawingToolbar: {
+        position: 'absolute',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'rgba(0, 0, 0, 0.7)',
+        borderRadius: '20px',
+        padding: '8px 16px',
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '8px',
+        zIndex: 100,
+        alignItems: 'center',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
+        maxWidth: '95%',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        '@media (max-width: 600px)': {
+            padding: '6px',
             gap: '4px',
-            padding: '8px',
-            background: 'rgba(0, 0, 0, 0.2)',
-            borderRadius: '8px',
-            margin: '4px 0',
-        },
-        colorOption: {
-            width: '20px',
-            height: '20px',
-            borderRadius: '50%',
-            cursor: 'pointer',
-            border: '2px solid rgba(255, 255, 255, 0.5)',
-            transition: 'transform 0.2s',
-            '&:hover': {
-                transform: 'scale(1.1)'
-            }
-        },
-        activeColor: {
-            border: '2px solid white',
-            boxShadow: '0 0 0 2px rgba(0, 0, 0, 0.3)'
-        },
-        canvas: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
+            bottom: 'max(10px, env(safe-area-inset-bottom))',
             width: '100%',
-            height: '100%',
-            zIndex: 50,
-            pointerEvents: 'none',
+            maxWidth: 'calc(100% - 20px)',
+            margin: '0 10px',
+            backdropFilter: 'blur(10px)'
         },
-        canvasDraw: {
-            pointerEvents: 'auto',
-            cursor: 'crosshair',
-        },
-        canvasErase: {
-            pointerEvents: 'auto',
-            cursor: 'cell',
-        },
-        stickerPanel: {
-            position: 'absolute',
-            top: '70px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: '8px',
-            padding: '12px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-            zIndex: 99,
-            width: '320px',
-            maxHeight: '400px',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-        },
-        stickerGrid: {
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '8px',
-            marginTop: '10px',
-        },
-        stickerItem: {
-            width: '60px',
-            height: '60px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0, 0, 0, 0.05)',
-            transition: 'transform 0.2s, background 0.2s',
-            '&:hover': {
-                transform: 'scale(1.05)',
-                background: 'rgba(0, 0, 0, 0.1)',
+        '@supports not (backdrop-filter: blur(10px))': {
+            '@media (max-width: 600px)': {
+                background: 'rgba(0, 0, 0, 0.85)'
             }
+        }
+    },
+    drawingButton: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '8px',
+        background: 'transparent',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        border: 'none',
+        transition: 'all 0.2s',
+        color: '#ffffff',
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+        '@media (max-width: 600px)': {
+            width: '36px',
+            height: '36px',
+            minHeight: '36px',
+            padding: '8px',
+            margin: '2px'
         },
-        stickerImage: {
-            maxWidth: '85%',
-            maxHeight: '85%',
-            objectFit: 'contain',
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)',
+            transform: 'scale(1.05)'
         },
-        stickerTitle: {
-            fontSize: '16px',
-            fontWeight: 'bold',
-            marginBottom: '8px',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-            paddingBottom: '8px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+        '&:active': {
+            transform: 'scale(0.95)'
+        }
+    },
+    activeDrawingTool: {
+        background: 'rgba(255, 255, 255, 0.2)', // Light background for active state
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.3)',
+        }
+    },
+    colorGrid: {
+        position: 'absolute',
+        bottom: '100%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '4px',
+        padding: '8px',
+        background: 'rgba(0, 0, 0, 0.8)',
+        borderRadius: '12px',
+        margin: '4px 0',
+        marginBottom: '8px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+        '@media (max-width: 600px)': {
+            gridTemplateColumns: 'repeat(8, 1fr)',
+            width: '280px',
+            maxWidth: '90vw',
+            padding: '6px',
+            gap: '3px'
+        }
+    },
+    colorOption: {
+        width: '24px',
+        height: '24px',
+        borderRadius: '50%',
+        cursor: 'pointer',
+        border: '2px solid rgba(255, 255, 255, 0.5)',
+        transition: 'transform 0.2s',
+        '@media (max-width: 600px)': {
+            width: '20px',
+            height: '20px'
         },
-        stickerClose: {
-            cursor: 'pointer',
-            fontSize: '18px',
-            opacity: 0.7,
-            '&:hover': {
-                opacity: 1,
-            }
-        },
-        stickerCategories: {
-            display: 'flex',
-            overflowX: 'auto',
-            gap: '8px',
-            marginBottom: '8px',
-            paddingBottom: '8px',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-            '&::-webkit-scrollbar': {
-                height: '4px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(0, 0, 0, 0.2)',
-                borderRadius: '4px',
-            }
-        },
-        categoryButton: {
-            padding: '4px 10px',
-            borderRadius: '16px',
+        '&:hover': {
+            transform: 'scale(1.1)'
+        }
+    },
+    activeColor: {
+        border: '2px solid white',
+        boxShadow: '0 0 0 2px rgba(0, 0, 0, 0.3)'
+    },
+    canvas: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 50,
+        pointerEvents: 'none',
+    },
+    canvasDraw: {
+        pointerEvents: 'auto',
+        cursor: 'crosshair',
+    },
+    canvasErase: {
+        pointerEvents: 'auto',
+        cursor: 'cell',
+    },
+    stickerPanel: {
+        position: 'absolute',
+        top: '70px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: '8px',
+        padding: '12px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+        zIndex: 99,
+        width: '320px',
+        maxHeight: '400px',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    stickerGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '8px',
+        marginTop: '10px',
+    },
+    stickerItem: {
+        width: '60px',
+        height: '60px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0, 0, 0, 0.05)',
+        transition: 'transform 0.2s, background 0.2s',
+        '&:hover': {
+            transform: 'scale(1.05)',
             background: 'rgba(0, 0, 0, 0.1)',
-            border: 'none',
-            fontSize: '12px',
-            whiteSpace: 'nowrap',
-            cursor: 'pointer',
-            transition: 'background 0.2s',
-            '&:hover': {
-                background: 'rgba(0, 0, 0, 0.2)',
-            }
+        }
+    },
+    stickerImage: {
+        maxWidth: '85%',
+        maxHeight: '85%',
+        objectFit: 'contain',
+    },
+    stickerTitle: {
+        fontSize: '16px',
+        fontWeight: 'bold',
+        marginBottom: '8px',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+        paddingBottom: '8px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    stickerClose: {
+        cursor: 'pointer',
+        fontSize: '18px',
+        opacity: 0.7,
+        '&:hover': {
+            opacity: 1,
+        }
+    },
+    stickerCategories: {
+        display: 'flex',
+        overflowX: 'auto',
+        gap: '8px',
+        marginBottom: '8px',
+        paddingBottom: '8px',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+        '&::-webkit-scrollbar': {
+            height: '4px',
         },
-        activeCategory: {
-            background: 'rgba(77, 99, 255, 0.9)',
-            color: 'white',
-            '&:hover': {
-                background: 'rgba(77, 99, 255, 0.8)',
-            }
+        '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(0, 0, 0, 0.2)',
+            borderRadius: '4px',
+        }
+    },
+    categoryButton: {
+        padding: '4px 10px',
+        borderRadius: '16px',
+        background: 'rgba(0, 0, 0, 0.1)',
+        border: 'none',
+        fontSize: '12px',
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        transition: 'background 0.2s',
+        '&:hover': {
+            background: 'rgba(0, 0, 0, 0.2)',
+        }
+    },
+    activeCategory: {
+        background: 'rgba(77, 99, 255, 0.9)',
+        color: 'white',
+        '&:hover': {
+            background: 'rgba(77, 99, 255, 0.8)',
+        }
+    },
+    gifButton: {
+        background: 'rgba(28, 28, 45, 0.9)',
+        borderRadius: '50%',
+        width: '32px',
+        height: '32px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px',
+        transition: 'all 0.2s',
+        border: 'none',
+        color: 'white',
+        marginLeft: '3px',
+        '&:hover': {
+            background: 'rgba(40, 40, 60, 0.95)',
+            transform: 'scale(1.05)'
         },
-        gifButton: {
-            background: 'rgba(28, 28, 45, 0.9)',
-            borderRadius: '50%',
-            width: '32px',
-            height: '32px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            transition: 'all 0.2s',
-            border: 'none',
-            color: 'white',
-            marginLeft: '3px',
-            '&:hover': {
-                background: 'rgba(40, 40, 60, 0.95)',
-                transform: 'scale(1.05)'
-            },
-            '&:active': {
-                transform: 'scale(0.95)'
-            }
-        },
-        stickerOnScreen: {
-            position: 'absolute',
-            zIndex: 51,
-            userSelect: 'none',
-            cursor: 'move',
-            transformOrigin: 'center center',
-        },
-        stickerDeleteButton: {
-            position: 'absolute',
-            top: '-8px',
-            right: '-8px',
-            width: '20px',
-            height: '20px',
-            borderRadius: '50%',
-            background: 'rgba(231, 52, 70, 0.95)',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-            cursor: 'pointer',
-            opacity: 0,
-            transition: 'opacity 0.2s',
-            border: '1px solid white',
-            '&:hover': {
-                transform: 'scale(1.1)',
-            }
-        },
-        stickerContainer: {
-            '&:hover $stickerDeleteButton': {
-                opacity: 1,
-            }
-        },
-        themePopover: {
-            position: 'absolute',
-            top: '60px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(28, 28, 45, 0.85)',
-            borderRadius: '10px',
+        '&:active': {
+            transform: 'scale(0.95)'
+        }
+    },
+    stickerOnScreen: {
+        position: 'absolute',
+        zIndex: 51,
+        userSelect: 'none',
+        cursor: 'move',
+        transformOrigin: 'center center',
+    },
+    stickerDeleteButton: {
+        position: 'absolute',
+        top: '-8px',
+        right: '-8px',
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        background: 'rgba(231, 52, 70, 0.95)',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '10px',
+        cursor: 'pointer',
+        opacity: 0,
+        transition: 'opacity 0.2s',
+        border: '1px solid white',
+        '&:hover': {
+            transform: 'scale(1.1)',
+        }
+    },
+    stickerContainer: {
+        '&:hover $stickerDeleteButton': {
+            opacity: 1,
+        }
+    },
+    themePopover: {
+        position: 'absolute',
+        bottom: '100%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'rgba(28, 28, 45, 0.95)',
+        borderRadius: '12px',
+        padding: '16px',
+        marginBottom: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        zIndex: 100,
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+        '@media (max-width: 600px)': {
+            width: '90%',
+            maxWidth: '320px',
             padding: '12px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            zIndex: 100,
+            marginBottom: '12px'
+        }
+    },
+    themeTitle: {
+        color: 'white',
+        fontSize: '14px',
+        fontWeight: 'bold',
+        marginBottom: '5px',
+        textAlign: 'center',
+    },
+    themesContainer: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '12px',
+        justifyContent: 'center',
+        '@media (max-width: 600px)': {
+            gap: '8px'
+        }
+    },
+    themeOption: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        cursor: 'pointer',
+        border: '2px solid transparent',
+        transition: 'transform 0.2s, border 0.2s',
+        '@media (max-width: 600px)': {
+            width: '36px',
+            height: '36px'
         },
-        themeTitle: {
+        '&:hover': {
+            transform: 'scale(1.1)'
+        }
+    },
+    activeTheme: {
+        border: '2px solid white',
+        boxShadow: '0 0 0 2px rgba(0, 0, 0, 0.3)'
+    },
+    settingsPopover: {
+        position: 'absolute',
+        top: '60px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'rgba(28, 28, 45, 0.9)',
+        borderRadius: '10px',
+        padding: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+        zIndex: 100,
+        minWidth: '120px',
+    },
+    settingsMenuItem: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px 10px',
+        cursor: 'pointer',
+        borderRadius: '6px',
+        transition: 'background 0.2s',
+        color: 'white',
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.1)',
+        }
+    },
+    settingsMenuIcon: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: '10px',
+        transform: 'scale(0.85)',
+    },
+    settingsMenuText: {
+        fontSize: '14px',
+    },
+    uploadedImagesPanel: {
+        position: 'absolute',
+        right: '60px',
+        top: 0,
+        background: 'rgba(28, 28, 45, 0.85)',
+        borderRadius: '10px',
+        padding: '10px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+        maxWidth: '200px',
+        maxHeight: '300px',
+        overflowY: 'auto',
+    },
+    uploadedImagesTitle: {
+        color: 'white',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        marginBottom: '8px',
+        textAlign: 'center',
+    },
+    uploadedImagesGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '8px',
+    },
+    uploadedImageItem: {
+        position: 'relative',
+        width: '80px',
+        height: '80px',
+        borderRadius: '6px',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        '&:hover': {
+            transform: 'scale(1.05)',
+            transition: 'transform 0.2s',
+        },
+        '&:hover $deleteButton': {
+            opacity: 1,
+        }
+    },
+    uploadedImageThumb: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+    },
+    // Add styles for collaborative mode
+    collaborativeButton: {
+        background: 'transparent', // Changed from dark background to transparent
+        borderRadius: '8px', // Changed from circular to slightly rounded
+        width: '32px',
+        height: '32px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px',
+        transition: 'all 0.2s',
+        border: 'none',
+        color: 'white',
+        marginLeft: '3px',
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
+            transform: 'scale(1.05)'
+        },
+        '&:active': {
+            transform: 'scale(0.95)'
+        }
+    },
+    activeCollaborativeButton: {
+        color: '#4CAF50', // Changed to just green text color
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
+        }
+    },
+    sharedIndicator: {
+        position: 'absolute',
+        top: '0',
+        right: '0',
+        background: 'rgba(46, 125, 50, 0.9)',
+        borderRadius: '50%',
+        width: '16px',
+        height: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1
+    },
+    collaborativeBadge: {
+        position: 'absolute',
+        top: '-8px',
+        right: '-8px',
+        background: 'rgba(46, 125, 50, 0.9)',
+        color: 'white',
+        borderRadius: '10px',
+        padding: '2px 8px',
+        fontSize: '10px',
+        fontWeight: 'bold',
+        zIndex: 100,
+    },
+    disabledCollaborativeButton: {
+        color: '#9e9e9e', // Changed to just grey text color
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
+        }
+    },
+    drawingIndicator: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: '10px',
+        padding: '5px 10px',
+        background: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        zIndex: 100,
+    },
+    drawingIndicatorDot: {
+        width: '10px',
+        height: '10px',
+        borderRadius: '50%',
+        background: 'rgba(0, 0, 0, 0.8)',
+        marginRight: '5px',
+    },
+    fontSizeControls: {
+        display: 'flex',
+        alignItems: 'center',
+        marginLeft: '5px',
+    },
+    fontSizeDisplay: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: '40px',
+        height: '40px',
+        background: 'transparent',
+        color: 'white',
+        borderRadius: '4px',
+        margin: '0 4px',
+        fontSize: '12px',
+        fontWeight: 'bold'
+    },
+    chatContainer: {
+        position: 'fixed',
+        right: '20px',
+        bottom: '20px',
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+        backdropFilter: 'blur(8px)',
+        width: '300px',
+        maxHeight: '70vh',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        zIndex: 100,
+        transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
+    },
+    chatContainerVisible: {
+        transform: 'translateY(0)',
+        opacity: 1,
+        pointerEvents: 'auto'
+    },
+    chatContainerHidden: {
+        transform: 'translateY(100%)',
+        opacity: 0,
+        pointerEvents: 'none'
+    },
+    chatHeader: {
+        padding: '15px',
+        background: 'var(--accent-color, linear-gradient(45deg, #834d9b 0%, #d04ed6 100%))',
+        color: '#ffffff',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontWeight: 'bold'
+    },
+    chatMessages: {
+        flex: 1,
+        overflow: 'auto',
+        padding: '10px',
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))'
+    },
+    chatInputContainer: {
+        padding: '8px 12px',
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        display: 'flex',
+        alignItems: 'center',
+        borderBottomLeftRadius: '12px',
+        borderBottomRightRadius: '12px',
+        position: 'relative'
+    },
+    chatInput: {
+        background: 'rgba(255, 255, 255, 0.1)',
+        color: '#ffffff',
+        border: 'none',
+        borderRadius: '18px',
+        padding: '8px 12px',
+        width: '100%',
+        fontSize: '14px',
+        outline: 'none',
+        '&::placeholder': {
+            color: 'rgba(255, 255, 255, 0.6)'
+        }
+    },
+    chatInputActions: {
+        display: 'flex',
+        marginLeft: '8px',
+    },
+    chatInputButton: {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        color: 'rgba(255, 255, 255, 0.7)',
+        padding: '4px',
+        marginLeft: '4px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            color: '#ffffff'
+        }
+    },
+    collapsedChatContainer: {
+        position: 'fixed',
+        right: '20px',
+        bottom: '20px',
+        width: '300px',
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+        borderRadius: '12px',
+        zIndex: 1000,
+        overflow: 'hidden',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
+    },
+    chatToggleButton: {
+        position: 'absolute',
+        right: '10px',
+        top: '10px',
+        background: 'none',
+        border: 'none',
+        color: 'white',
+        fontSize: '20px',
+        cursor: 'pointer'
+    },
+    closeButton: {
+        background: 'none',
+        border: 'none',
+        color: '#ffffff',
+        fontSize: '20px',
+        cursor: 'pointer',
+        padding: '0 5px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '30px',
+        height: '30px',
+        borderRadius: '50%',
+        '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+        }
+    },
+    chatHint: {
+        fontSize: '9px',
+        color: 'rgba(255, 255, 255, 0.4)',
+        textAlign: 'center',
+        padding: '2px 0',
+        position: 'absolute',
+        bottom: '0px',
+        left: '0',
+        right: '0',
+        opacity: 0.7,
+        pointerEvents: 'none'
+    },
+    participantsList: {
+        position: 'fixed',
+        left: '16px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8px',
+        zIndex: 100,
+        padding: '8px 4px',
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+        backdropFilter: 'blur(8px)',
+        borderRadius: '24px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+    },
+    
+    participantItem: {
+        position: 'relative',
+        width: '36px',
+        height: '36px',
+        borderRadius: '50%',
+        transition: 'all 0.2s ease',
+        border: '2px solid rgba(255, 255, 255, 0.2)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        
+        '&:hover': {
+            transform: 'scale(1.05)',
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+            zIndex: 2
+        }
+    },
+    
+    activeParticipant: {
+        border: '2px solid var(--accent-color, #246FE5)'
+    },
+    
+    participantName: {
+        position: 'absolute',
+        left: '50px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        fontSize: '12px',
+        whiteSpace: 'nowrap',
+        opacity: 0,
+        transition: 'opacity 0.2s ease',
+        pointerEvents: 'none',
+        
+        '$participantItem:hover &': {
+            opacity: 1
+        }
+    },
+    
+    adminBadge: {
+        position: 'absolute',
+        right: '-2px',
+        bottom: '-2px',
+        width: '16px',
+        height: '16px',
+        borderRadius: '50%',
+        backgroundColor: 'var(--accent-color, #246FE5)',
+        border: '2px solid black',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '8px',
+        color: 'white',
+        fontWeight: 'bold'
+    },
+    addParticipantButton: {
+        width: '36px',
+        height: '36px',
+        borderRadius: '50%',
+        backgroundColor: '#4CAF50',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '20px',
+        padding: 0,
+        transition: 'all 0.2s ease',
+        marginTop: '4px',
+        
+        '&:hover': {
+            transform: 'scale(1.05)',
+            backgroundColor: '#45a049'
+        }
+    },
+    backButton: {
+        position: 'fixed',
+        top: '20px',
+        left: '20px',
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.85))',
+        backdropFilter: 'blur(8px)',
+        color: 'white',
+        width: '44px',
+        height: '44px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+        zIndex: 1000,
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            transform: 'scale(1.05)',
+            boxShadow: '0 6px 16px rgba(0, 0, 0, 0.3)',
+            borderColor: 'rgba(255, 255, 255, 0.4)'
+        },
+        '&:active': {
+            transform: 'scale(0.95)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+        }
+    },
+    templatePanel: {
+        position: 'absolute',
+        right: '60px',
+        top: 0,
+        background: 'rgba(28, 28, 45, 0.95)',
+        borderRadius: '12px',
+        padding: '16px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+        width: '280px',
+        maxHeight: '400px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        zIndex: 1000,
+    },
+    templateHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        marginBottom: '8px',
+        
+        '& button': {
+            background: 'none',
+            border: 'none',
             color: 'white',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            marginBottom: '5px',
-            textAlign: 'center',
-        },
-        themesContainer: {
-            display: 'flex',
-            gap: '8px',
-            justifyContent: 'center',
-        },
-        themeOption: {
-            width: '28px',
-            height: '28px',
-            borderRadius: '50%',
+            fontSize: '20px',
             cursor: 'pointer',
-            border: '2px solid transparent',
-            transition: 'transform 0.2s, border 0.2s',
+            padding: '4px',
             '&:hover': {
-                transform: 'scale(1.1)',
+                opacity: 0.8,
             }
-        },
-        activeTheme: {
-            border: '2px solid white',
-            boxShadow: '0 0 0 2px rgba(0, 0, 0, 0.3)'
-        },
-        settingsPopover: {
-            position: 'absolute',
-            top: '60px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(28, 28, 45, 0.9)',
-            borderRadius: '10px',
-            padding: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            zIndex: 100,
-            minWidth: '120px',
-        },
-        settingsMenuItem: {
-            display: 'flex',
-            alignItems: 'center',
-            padding: '8px 10px',
-            cursor: 'pointer',
-            borderRadius: '6px',
-            transition: 'background 0.2s',
-            color: 'white',
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.1)',
-            }
-        },
-        settingsMenuIcon: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: '10px',
-            transform: 'scale(0.85)',
-        },
-        settingsMenuText: {
-            fontSize: '14px',
-        },
-        uploadedImagesPanel: {
-            position: 'absolute',
-            right: '60px',
-            top: 0,
-            background: 'rgba(28, 28, 45, 0.85)',
-            borderRadius: '10px',
-            padding: '10px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-            maxWidth: '200px',
-            maxHeight: '300px',
-            overflowY: 'auto',
-        },
-        uploadedImagesTitle: {
-            color: 'white',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            marginBottom: '8px',
-            textAlign: 'center',
-        },
-        uploadedImagesGrid: {
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '8px',
-        },
-        uploadedImageItem: {
-            position: 'relative',
-            width: '80px',
-            height: '80px',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            cursor: 'pointer',
-            '&:hover': {
-                transform: 'scale(1.05)',
-                transition: 'transform 0.2s',
-            },
-            '&:hover $deleteButton': {
-                opacity: 1,
-            }
-        },
-        uploadedImageThumb: {
+        }
+    },
+    templateList: {
+        flex: 1,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+    },
+    templateItem: {
+        display: 'flex',
+        gap: '12px',
+        padding: '8px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '8px',
+        transition: 'transform 0.2s',
+        
+        '&:hover': {
+            transform: 'scale(1.02)',
+        }
+    },
+    templatePreview: {
+        width: '60px',
+        height: '60px',
+        borderRadius: '6px',
+        overflow: 'hidden',
+        
+        '& img': {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-        },
-        // Add styles for collaborative mode
-        collaborativeButton: {
-            background: 'transparent', // Changed from dark background to transparent
-            borderRadius: '8px', // Changed from circular to slightly rounded
-            width: '32px',
-            height: '32px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-            transition: 'all 0.2s',
-            border: 'none',
-            color: 'white',
-            marginLeft: '3px',
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)', // Light hover effect
-                transform: 'scale(1.05)'
-            },
-            '&:active': {
-                transform: 'scale(0.95)'
-            }
-        },
-        activeCollaborativeButton: {
-            color: '#4CAF50', // Changed to just green text color
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
-            }
-        },
-        sharedIndicator: {
-            position: 'absolute',
-            top: '0',
-            right: '0',
-            background: 'rgba(46, 125, 50, 0.9)',
-            borderRadius: '50%',
-            width: '16px',
-            height: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1
-        },
-        collaborativeBadge: {
-            position: 'absolute',
-            top: '-8px',
-            right: '-8px',
-            background: 'rgba(46, 125, 50, 0.9)',
-            color: 'white',
-            borderRadius: '10px',
-            padding: '2px 8px',
-            fontSize: '10px',
-            fontWeight: 'bold',
-            zIndex: 100,
-        },
-        disabledCollaborativeButton: {
-            color: '#9e9e9e', // Changed to just grey text color
-            '&:hover': {
-                background: 'rgba(255, 255, 255, 0.2)' // Light hover effect
-            }
-        },
-        drawingIndicator: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginTop: '10px',
-            padding: '5px 10px',
-            background: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: '4px',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            zIndex: 100,
-        },
-        drawingIndicatorDot: {
-            width: '10px',
-            height: '10px',
-            borderRadius: '50%',
-            background: 'rgba(0, 0, 0, 0.8)',
-            marginRight: '5px',
-        },
-        fontSizeControls: {
-            display: 'flex',
-            alignItems: 'center',
-            marginLeft: '5px',
-        },
-        fontSizeDisplay: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minWidth: '40px',
-            height: '40px',
-            background: 'transparent',
-            color: 'white',
-            borderRadius: '4px',
-            margin: '0 4px',
-            fontSize: '12px',
-            fontWeight: 'bold'
-        },
-        chatContainer: {
-            position: 'fixed',
-            right: '20px',
-            bottom: '20px',
-            transform: 'none',
-            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
-            backdropFilter: 'blur(8px)',
-            width: '300px',
-            maxHeight: '70vh',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            zIndex: 100
-        },
-        chatHeader: {
-            padding: '15px',
-            background: 'var(--accent-color, linear-gradient(45deg, #834d9b 0%, #d04ed6 100%))',
-            color: '#ffffff',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontWeight: 'bold'
-        },
-        chatMessages: {
-            flex: 1,
-            overflow: 'auto',
-            padding: '10px',
-            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))'
-        },
-        chatInputContainer: {
-            padding: '8px 12px',
-            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            borderBottomLeftRadius: '12px',
-            borderBottomRightRadius: '12px',
-            position: 'relative'
-        },
-        chatInput: {
-            background: 'rgba(255, 255, 255, 0.1)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '18px',
-            padding: '8px 12px',
-            width: '100%',
+        }
+    },
+    templateInfo: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        color: 'white',
+        
+        '& span': {
             fontSize: '14px',
-            outline: 'none',
-            '&::placeholder': {
-                color: 'rgba(255, 255, 255, 0.6)'
-            }
-        },
-        chatInputActions: {
-            display: 'flex',
-            marginLeft: '8px',
-        },
-        chatInputButton: {
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'rgba(255, 255, 255, 0.7)',
-            padding: '4px',
-            marginLeft: '4px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: '#ffffff'
-            }
-        },
-        collapsedChatContainer: {
-            position: 'fixed',
-            right: '20px',
-            bottom: '20px',
-            width: '300px',
-            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
-            borderRadius: '12px',
-            zIndex: 1000,
-            overflow: 'hidden',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
-        },
-        chatToggleButton: {
-            position: 'absolute',
-            right: '10px',
-            top: '10px',
-            background: 'none',
-            border: 'none',
-            color: 'white',
-            fontSize: '20px',
-            cursor: 'pointer'
-        },
-        closeButton: {
-            background: 'none',
-            border: 'none',
-            color: '#ffffff',
-            fontSize: '20px',
-            cursor: 'pointer',
-            padding: '0 5px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-            }
-        },
-        chatHint: {
-            fontSize: '9px',
-            color: 'rgba(255, 255, 255, 0.4)',
-            textAlign: 'center',
-            padding: '2px 0',
-            position: 'absolute',
-            bottom: '0px',
-            left: '0',
-            right: '0',
-            opacity: 0.7,
-            pointerEvents: 'none'
-        },
-        participantsList: {
-            position: 'fixed',
-            left: '16px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-            zIndex: 100,
-            padding: '8px 4px',
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(8px)',
-            borderRadius: '24px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-        },
+            fontWeight: 500, // Change from string '500' to number 500
+        }
+    },
+    templateActions: {
+        display: 'flex',
+        gap: '8px',
         
-        participantItem: {
-            position: 'relative',
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            transition: 'all 0.2s ease',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            
-            '&:hover': {
-                transform: 'scale(1.05)',
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-                zIndex: 2
-            }
-        },
-        
-        activeParticipant: {
-            border: '2px solid var(--accent-color, #246FE5)'
-        },
-        
-        participantName: {
-            position: 'absolute',
-            left: '50px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
+        '& button': {
             padding: '4px 8px',
+            border: 'none',
             borderRadius: '4px',
+            cursor: 'pointer',
             fontSize: '12px',
-            whiteSpace: 'nowrap',
-            opacity: 0,
-            transition: 'opacity 0.2s ease',
-            pointerEvents: 'none',
+            transition: 'all 0.2s',
             
-            '$participantItem:hover &': {
-                opacity: 1
-            }
-        },
-        
-        adminBadge: {
-            position: 'absolute',
-            right: '-2px',
-            bottom: '-2px',
-            width: '16px',
-            height: '16px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--accent-color, #246FE5)',
-            border: '2px solid black',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '8px',
-            color: 'white',
-            fontWeight: 'bold'
-        },
-        addParticipantButton: {
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '20px',
-            padding: 0,
-            transition: 'all 0.2s ease',
-            marginTop: '4px',
-            
-            '&:hover': {
-                transform: 'scale(1.05)',
-                backgroundColor: '#45a049'
-            }
-        },
-        backButton: {
-            position: 'fixed',
-            top: '20px',
-            left: '20px',
-            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.85))',
-            backdropFilter: 'blur(8px)',
-            color: 'white',
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-            zIndex: 1000,
-            transition: 'all 0.2s ease',
-            '&:hover': {
-                transform: 'scale(1.05)',
-                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.3)',
-                borderColor: 'rgba(255, 255, 255, 0.4)'
-            },
-            '&:active': {
-                transform: 'scale(0.95)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
-            }
-        },
-        templatePanel: {
-            position: 'absolute',
-            right: '60px',
-            top: 0,
-            background: 'rgba(28, 28, 45, 0.95)',
-            borderRadius: '12px',
-            padding: '16px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-            width: '280px',
-            maxHeight: '400px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            zIndex: 1000,
-        },
-        templateHeader: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            marginBottom: '8px',
-            
-            '& button': {
-                background: 'none',
-                border: 'none',
+            '&:first-child': {
+                background: '#4CAF50',
                 color: 'white',
-                fontSize: '20px',
-                cursor: 'pointer',
-                padding: '4px',
                 '&:hover': {
-                    opacity: 0.8,
-                }
-            }
-        },
-        templateList: {
-            flex: 1,
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-        },
-        templateItem: {
-            display: 'flex',
-            gap: '12px',
-            padding: '8px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            transition: 'transform 0.2s',
-            
-            '&:hover': {
-                transform: 'scale(1.02)',
-            }
-        },
-        templatePreview: {
-            width: '60px',
-            height: '60px',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            
-            '& img': {
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-            }
-        },
-        templateInfo: {
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            color: 'white',
-            
-            '& span': {
-                fontSize: '14px',
-                fontWeight: 500, // Change from string '500' to number 500
-            }
-        },
-        templateActions: {
-            display: 'flex',
-            gap: '8px',
-            
-            '& button': {
-                padding: '4px 8px',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                transition: 'all 0.2s',
-                
-                '&:first-child': {
-                    background: '#4CAF50',
-                    color: 'white',
-                    '&:hover': {
-                        background: '#45a049',
-                    }
-                },
-                
-                '&:last-child': {
-                    background: '#f44336',
-                    color: 'white',
-                    '&:hover': {
-                        background: '#da190b',
-                    }
-                }
-            }
-        },
-        saveTemplate: {
-            display: 'flex',
-            gap: '8px',
-            padding: '8px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            
-            '& input': {
-                flex: 1,
-                padding: '8px',
-                border: 'none',
-                borderRadius: '4px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                
-                '&::placeholder': {
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    background: '#45a049',
                 }
             },
             
-            '& button': {
-                padding: '8px 16px',
-                border: 'none',
-                borderRadius: '4px',
-                background: '#2196F3',
+            '&:last-child': {
+                background: '#f44336',
                 color: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                
                 '&:hover': {
-                    background: '#1976D2',
+                    background: '#da190b',
                 }
-            }
-        },
-        titleInput: {
-            background: 'transparent',
-            border: 'none',
-            color: 'white',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            padding: '2px 4px',
-            width: '100%',
-            outline: 'none',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.5)',
-            
-            '&:focus': {
-                borderBottom: '1px solid white',
             }
         }
-    };
-});
+    },
+    saveTemplate: {
+        display: 'flex',
+        gap: '8px',
+        padding: '8px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '8px',
+        
+        '& input': {
+            flex: 1,
+            padding: '8px',
+            border: 'none',
+            borderRadius: '4px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            color: 'white',
+            
+            '&::placeholder': {
+                color: 'rgba(255, 255, 255, 0.5)',
+            }
+        },
+        
+        '& button': {
+            padding: '8px 16px',
+            border: 'none',
+            borderRadius: '4px',
+            background: '#2196F3',
+            color: 'white',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            
+            '&:hover': {
+                background: '#1976D2',
+            }
+        }
+    },
+    titleInput: {
+        background: 'transparent',
+        border: 'none',
+        color: 'white',
+        fontSize: '14px',
+        fontWeight: 'bold',
+        padding: '2px 4px',
+        width: '100%',
+        outline: 'none',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.5)',
+        
+        '&:focus': {
+            borderBottom: '1px solid white',
+        }
+    },
+    floatingButton: {
+        position: 'fixed',
+        right: '20px',
+        bottom: '20px',
+        width: '50px',
+        height: '50px',
+        borderRadius: '50%',
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+    }
+}));
 
 // Array of background colors and gradients
 const BACKGROUNDS = [
@@ -1508,7 +1592,8 @@ const getBrightness = (hexColor: string): number => {
     const b = parseInt(hexColor.substr(4, 2), 16);
     
     // Calculate brightness (perceived brightness formula)
-    return (r * 299 + g * 587 + b * 114) / 1000;
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness;
 };
 
 // Update the interface for background objects to include dataUrl
@@ -1521,36 +1606,6 @@ interface IBackground {
     dataUrl?: string; // Add dataUrl for base64 images
 }
 
-// Update findBackgroundById to return the proper type with dataUrl
-const findBackgroundById = (backgroundId: string): IBackground => {
-    // First check in built-in backgrounds
-    const builtInBg = BACKGROUNDS.find(bg => bg.id === backgroundId);
-    if (builtInBg) {
-        return {
-            ...builtInBg,
-            thumbnail: builtInBg.type === 'image' 
-                ? builtInBg.value.replace('url(', '').replace(')', '') 
-                : undefined
-        };
-    }
-    
-    // Then check in custom backgrounds
-    const customBg = customBackgrounds.find(bg => bg.id === backgroundId);
-    if (customBg) {
-        // For custom backgrounds with dataUrl property (for base64 images)
-        return {
-            ...customBg,
-            // If the custom background has a dataUrl property, use it for thumbnail
-            thumbnail: customBg.dataUrl || customBg.value.replace('url(', '').replace(')', '')
-        };
-    }
-    
-    // Default fallback
-    return {
-        ...BACKGROUNDS[0],
-        thumbnail: undefined
-    };
-};
 
 /**
  * Component for selecting the background color or gradient in a here.fm style UI.
@@ -1566,21 +1621,6 @@ const BackgroundSelector = () => {
     const [showThemeSelector, setShowThemeSelector] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState('default');
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-    
-    // Add stickers state
-    const [stickers, setStickers] = useState<Array<{
-        type: 'emoji' | 'image';
-        content: string;
-        position: { x: number; y: number };
-        size: number;
-        rotation: number;
-    }>>([]);
-    
-    // Add chat visibility state
-    // Replace the showChat state with isChatCollapsed
-    // const [showChat, setShowChat] = useState(false);
-    const [isChatCollapsed, setIsChatCollapsed] = useState(false);
-    const [lastTapTime, setLastTapTime] = useState(0);
     const _messages = useSelector((state: IReduxState) => state['features/chat'].messages);
     
     // Permission-based collaborative mode
@@ -4227,15 +4267,7 @@ const BackgroundSelector = () => {
     //     setShowChat(!showChat);
     // };
     const handleChatInputTap = () => {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTapTime;
-        
-        // Detect double tap (if tap happened within 300ms of last tap)
-        if (tapLength < 300 && tapLength > 0) {
-            setIsChatCollapsed(!isChatCollapsed);
-        }
-        
-        setLastTapTime(currentTime);
+        setIsChatVisible(!isChatVisible);
     };
 
     // Add a ChatIcon component near the other icon components
@@ -4562,13 +4594,7 @@ const BackgroundSelector = () => {
         </svg>
     );
 
-    // Add template button to the drawing toolbar
-    <button 
-        className={classes.drawingButton}
-        onClick={() => setShowTemplates(!showTemplates)}
-        title="Templates">
-        <TemplateIcon />
-    </button>
+
 
     // Add template panel component
     {showTemplates && (
@@ -4612,7 +4638,12 @@ const BackgroundSelector = () => {
 
     // Add new state for editing
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const [roomTitle, setRoomTitle] = useState('Yarashii Room');
+    const roomName = useSelector(getConferenceName);
+    const [roomTitle, setRoomTitle] = useState(roomName);
+
+    useEffect(() => {
+        setRoomTitle(roomName);
+    }, [roomName]);
 
     // Add new function to handle title update
     const handleTitleUpdate = () => {
@@ -4637,17 +4668,33 @@ const BackgroundSelector = () => {
         }]);
     };
 
+
+    const toggleChat = () => {
+        setIsChatVisible(!isChatVisible);
+    };
+
+    const chatContainerStyle = {
+        position: 'fixed',
+        right: '20px',
+        bottom: '20px',
+        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+        backdropFilter: 'blur(8px)',
+        width: '300px',
+        maxHeight: '70vh',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        zIndex: 100
+    };
+
+    // At the top with other state declarations
+    const [isChatVisible, setIsChatVisible] = useState(false);
+
     return (
         <>
-            {/* Back button */}
-            <div 
-                className={classes.backButton}
-                onClick={handleBackClick}
-                role="button"
-                tabIndex={0}
-                aria-label="Go back">
-                <BackIcon />
-            </div>
         
             <div className={classes.buttonContainer}>
                 <span className={classes.titleBar}>
@@ -4900,14 +4947,13 @@ const BackgroundSelector = () => {
                     <ClearIcon />
                 </button>
                 
-                {/* Add More Options button */}
-                <button 
-                    className={classes.drawingButton}
-                    onClick={() => setShowMoreOptions(!showMoreOptions)}
-                    title="More Options">
-                    <MoreOptionsIcon />
-                </button>
-                
+                    <button 
+        className={classes.drawingButton}
+        onClick={() => setShowTemplates(!showTemplates)}
+        title="Templates">
+        <TemplateIcon />
+    </button>
+    
                 {showColorPicker && (
                     <div className={classes.colorGrid}>
                         {COLORS.map(color => (
@@ -5323,68 +5369,6 @@ const BackgroundSelector = () => {
                 </>
             )}
 
-            {/* Chat Container - Always visible but can be collapsed */}
-            {isChatCollapsed ? (
-                <div className={classes.collapsedChatContainer}>
-                    <div 
-                        className={classes.chatInputContainer}
-                        onClick={handleChatInputTap}
-                        style={{ 
-                            backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
-                            borderTop: 'none', 
-                            marginTop: '0', 
-                            borderRadius: '12px' 
-                        }}>
-                        <input 
-                            type="text" 
-                            placeholder="Say something..." 
-                            className={classes.chatInput}
-                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                            readOnly
-                        />
-                        <div className={classes.chatInputActions}>
-                            <button className={classes.chatInputButton}>
-                                <EmojiIcon />
-                            </button>
-                            <button className={classes.chatInputButton}>
-                                <GifIcon />
-                            </button>
-                        </div>
-                        <div className={classes.chatHint}>Double-tap to expand</div>
-                    </div>
-                </div>
-            ) : (
-                <div className={classes.chatContainer}>
-                    <div className={classes.chatHeader}>
-                        <span>Chat</span>
-                    </div>
-                    <div className={classes.chatMessages}>
-                        <MessageContainer messages={_messages} />
-                    </div>
-                    <div 
-                        className={classes.chatInputContainer}
-                        onClick={handleChatInputTap}>
-                        <input 
-                            type="text" 
-                            placeholder="Say something..." 
-                            className={classes.chatInput}
-                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                            value={chatInputText}
-                            onChange={(e) => setChatInputText(e.target.value)}
-                            onKeyPress={handleChatKeyPress}
-                        />
-                        <div className={classes.chatInputActions}>
-                            <button className={classes.chatInputButton}>
-                                <EmojiIcon />
-                            </button>
-                            <button className={classes.chatInputButton}>
-                                <GifIcon />
-                            </button>
-                        </div>
-                        <div className={classes.chatHint}>Double-tap to collapse</div>
-                    </div>
-                </div>
-            )}
 
             {/* Add this right after the opening div of the main component return (inside the main container) */}
             <ParticipantsList 
@@ -5395,6 +5379,100 @@ const BackgroundSelector = () => {
                 permissionList={window.backgroundSync?.permissionList || new Set()}
                 currentDrawer={currentDrawer}
             />
+
+            {/* Chat Implementation */}
+            <button 
+                className={classes.floatingButton}
+                onClick={() => setIsChatVisible(!isChatVisible)}
+                title={isChatVisible ? "Close Chat" : "Open Chat"}>
+                <ChatIcon />
+            </button>
+
+            {isChatVisible && (
+                <div style={{
+                    position: 'fixed' as const,
+                    right: '20px',
+                    bottom: '80px',
+                    width: '300px',
+                    maxHeight: '70vh',
+                    backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+                    backdropFilter: 'blur(8px)',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    display: 'flex' as const,
+                    flexDirection: 'column' as const,
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    zIndex: 999
+                }}>
+                    <div style={{
+                        padding: '15px',
+//                        backgroundColor: 'var(--accent-color, rgba(28, 32, 37, 0.9))',
+                        color: 'white',
+                        fontWeight: 'bold',
+                
+                    }}>
+                        <h3 style={{ color: 'white' }}>Chat</h3>
+                    </div>
+                    <div style={{
+                        flex: 1,
+                        overflow: 'auto',
+                        padding: '10px',
+                        maxHeight: '50vh'
+                    }}>
+                        <MessageContainer messages={_messages} />
+                    </div>
+                    <div style={{
+                        padding: '8px 12px',
+                        backgroundColor: 'var(--background-color, rgba(28, 32, 37, 0.8))',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.08)'
+                    }}>
+                        <input 
+                            type="text" 
+                            placeholder="Say something..." 
+                            style={{
+                                width: '100%',
+                                padding: '8px 12px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                border: 'none',
+                                borderRadius: '18px',
+                                color: '#ffffff',
+                                fontSize: '14px',
+                                outline: 'none'
+                            }}
+                            value={chatInputText}
+                            onChange={(e) => setChatInputText(e.target.value)}
+                            onKeyPress={handleChatKeyPress}
+                        />
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            marginTop: '8px'
+                        }}>
+                            <button style={{
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                borderRadius: '50%'
+                            }}>
+                                <EmojiIcon />
+                            </button>
+                            <button style={{
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                borderRadius: '50%'
+                            }}>
+                                <GifIcon />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

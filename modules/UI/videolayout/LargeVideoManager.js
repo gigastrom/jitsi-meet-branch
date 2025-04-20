@@ -128,12 +128,8 @@ export default class LargeVideoManager {
          */
         this.videoTrack = undefined;
 
-        this.container = document.getElementById('largeVideoContainer');
+        this.container = document.getElementById('newLargeVideoContainer');
 
-        this.container.style.display = 'inline-block';
-
-        this.container.addEventListener('mouseenter', e => this.onHoverIn(e));
-        this.container.addEventListener('mouseleave', e => this.onHoverOut(e));
 
         // Bind event handler so it is only bound once for every instance.
         this._onVideoResolutionUpdate

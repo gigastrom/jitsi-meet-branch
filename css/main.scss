@@ -63,7 +63,6 @@ $flagsImagePath: "../images/";
 @import 'policy';
 @import 'popover';
 @import 'filmstrip/horizontal_filmstrip';
-@import 'filmstrip/small_video';
 @import 'filmstrip/tile_view';
 @import 'filmstrip/tile_view_overrides';
 @import 'filmstrip/vertical_filmstrip';
@@ -86,9 +85,7 @@ $flagsImagePath: "../images/";
 @import 'reactions-menu';
 @import 'plan-limit';
 
-/* Modules END */
 
-// Import our custom here.fm style
+/* Custom Styles BEGIN */
 @import 'custom-here-fm';
-// Import our custom styles for bubble videos
-@import 'custom-bubble-videos';
+/* Custom Styles END */
