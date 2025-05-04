@@ -1621,6 +1621,7 @@ const BackgroundSelector = () => {
     const [showThemeSelector, setShowThemeSelector] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState('default');
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+    const [stickers, setStickers] = useState<any[]>([]);
     const _messages = useSelector((state: IReduxState) => state['features/chat'].messages);
     
     // Permission-based collaborative mode
